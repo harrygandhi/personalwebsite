@@ -109,8 +109,9 @@ nav a:hover{opacity:.5;}
 .card-quote.lavender{background:#cec8d8;}
 .card-quote img{width:100%;display:block;object-fit:cover;margin-bottom:16px;}
 .card-quote .quote-text{font-size:14px;color:#3a3a3a;line-height:1.75;white-space:pre-line;}
-.card-quote h3{font-size:18px;font-weight:700;line-height:1.2;margin-bottom:6px;letter-spacing:-.2px;}
+.card-quote h3{font-size:22px;font-weight:700;line-height:1.18;margin-bottom:5px;letter-spacing:-.2px;}
 .card-quote .author{font-size:11px;color:#4a4a4a;margin-top:12px;}
+.card-quote .tag{display:inline-block;font-size:10px;color:#9a958e;letter-spacing:.3px;margin-top:14px;font-style:italic;}
 
 /* Loading state */
 .loading{text-align:center;padding:60px 20px;color:#bbb;font-size:14px;}
@@ -301,7 +302,8 @@ function renderPosts(pages){
         ${imageUrl ? `<img src="${imageUrl}" alt="">` : ''}
         ${title && title !== 'Untitled' ? `<h3>${title}</h3>` : ''}
         ${preview ? `<div class="quote-text">${preview}</div>` : ''}
-        ${author ? `<div class="author">— ${author}</div>` : ''}`;
+        ${author ? `<div class="author">— ${author}</div>` : ''}
+        <div class="tag">#fiction</div>`;
       masonry.appendChild(el);
     } else if(cardType === 'art-only'){
       // Art postcard — no link
