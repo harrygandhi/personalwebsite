@@ -57,6 +57,8 @@ h1{font-size:40px;font-weight:700;line-height:1.18;margin-bottom:16px;letter-spa
 .mn-ph{font-size:12.5px;color:#aaa;font-style:italic;margin-bottom:7px;}
 .mn-txt{font-size:12px;color:#888;line-height:1.55;margin-bottom:7px;}
 .mn-txt .hl{color:#c47a3a;font-weight:500;}
+.mn-img{width:100%;display:block;margin-bottom:10px;border-radius:2px;}
+.mn-cap{font-size:10px;color:#aaa;font-style:italic;margin-top:-6px;margin-bottom:8px;}
 .mn-lnk{font-size:12px;color:#c47a3a;text-decoration:none;}
 .mn-lnk:hover{text-decoration:underline;}
 .mn-lnk::after{content:' ↗';font-size:10px;}
@@ -246,12 +248,25 @@ async function fetchAnnotations(blocks){
 
     return data.results.map(row => {
       const props = row.properties;
+      // Image: support Files & Media property (file/external) or URL property
+      let image = '';
+      if(props.Image){
+        if(props.Image.files && props.Image.files.length > 0){
+          const f = props.Image.files[0];
+          image = f.file?.url || f.external?.url || '';
+        } else if(props.Image.url){
+          image = props.Image.url;
+        } else if(props.Image.rich_text?.[0]?.plain_text){
+          image = props.Image.rich_text[0].plain_text;
+        }
+      }
       return {
         trigger: (props.Trigger?.title || []).map(t => t.plain_text).join('').trim().toLowerCase(),
         label: props.Label?.rich_text?.[0]?.plain_text || '',
         body: props.Body?.rich_text?.[0]?.plain_text || '',
         phonetic: props.Phonetic?.rich_text?.[0]?.plain_text || '',
-        link: props.Link?.url || props.Link?.rich_text?.[0]?.plain_text || ''
+        link: props.Link?.url || props.Link?.rich_text?.[0]?.plain_text || '',
+        image: image
       };
     }).filter(a => a.trigger);
   } catch(e){
@@ -279,6 +294,7 @@ function wireUpAnnotations(annotations){
     let h = '';
     if(ann.label) h += `<div class="mn-ttl">${ann.label}</div>`;
     if(ann.phonetic) h += `<div class="mn-ph">${ann.phonetic}</div>`;
+    if(ann.image) h += `<img class="mn-img" src="${ann.image}" alt="">`;
     if(ann.body) h += `<div class="mn-txt">${ann.body}</div>`;
     if(ann.link) h += `<a class="mn-lnk" href="${ann.link}" target="_blank">Link</a>`;
 
@@ -381,10 +397,10 @@ async function loadPost(){
    ═══════════════════════════════════════════════════════════ */
 function loadDemoAnnotations(){
   const demoAnnotations = [
-    {trigger:'consectetur consectetur sed porta felis. sit ut amet odio', label:'[ 1 ]', body:'Semper donec vel massa ac cras nisl. Sagittis scelerisque risus faucibus integer purus blandit etiam luctus.', phonetic:'', link:'#'},
-    {trigger:'pellentesque orci amet porta', label:'Definition', body:'Semper donec vel massa ac cras nisl. Sagittis scelerisque risus faucibus integer purus blandit etiam luctus.', phonetic:'/ˌdefəˈniSHən/', link:'#'},
-    {trigger:'ullamcorper elementum', label:'Definition', body:'Semper donec vel massa ac cras nisl. Sagittis scelerisque risus faucibus integer purus blandit.', phonetic:'/ˌdefəˈniSHən/', link:'#'},
-    {trigger:'mauris egestas non', label:'Definition', body:'Semper donec vel massa ac cras nisl. Sagittis scelerisque risus faucibus.', phonetic:'/ˈmɔːrɪs/', link:'#'},
+    {trigger:'consectetur consectetur sed porta felis. sit ut amet odio', label:'Fig. 1', body:'Semper donec vel massa ac cras nisl. Sagittis scelerisque risus faucibus integer purus blandit etiam luctus.', phonetic:'Image & Description', image:'hero-color.png.png', link:'#'},
+    {trigger:'pellentesque orci amet porta', label:'Definition', body:'Semper donec vel massa ac cras nisl. Sagittis scelerisque risus faucibus integer purus blandit etiam luctus.', phonetic:'/ˌdefəˈniSHən/', image:'', link:'#'},
+    {trigger:'ullamcorper elementum', label:'Definition', body:'Semper donec vel massa ac cras nisl. Sagittis scelerisque risus faucibus integer purus blandit.', phonetic:'/ˌdefəˈniSHən/', image:'', link:'#'},
+    {trigger:'mauris egestas non', label:'Definition', body:'Semper donec vel massa ac cras nisl. Sagittis scelerisque risus faucibus.', phonetic:'/ˈmɔːrɪs/', image:'', link:'#'},
   ];
   wireUpAnnotations(demoAnnotations);
 }
