@@ -1,0 +1,390 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Article — Harry Gandhi</title>
+<link href="https://fonts.googleapis.com/css2?family=Brygada+1918:ital,wght@0,400;0,500;0,600;0,700;1,400;1,500;1,600;1,700&display=swap" rel="stylesheet">
+<style>
+*{margin:0;padding:0;box-sizing:border-box;}
+html{scroll-behavior:smooth;}
+body{font-family:'Brygada 1918',serif;background:#faf8f5;color:#1a1a1a;-webkit-font-smoothing:antialiased;}
+
+nav{display:flex;justify-content:flex-end;align-items:center;gap:28px;padding:22px 48px;}
+nav a{color:#1a1a1a;text-decoration:none;font-size:14px;letter-spacing:.3px;transition:opacity .3s;}
+nav a:hover{opacity:.5;}
+.nav-sub{display:flex;align-items:center;gap:0;margin-left:8px;}
+.nav-sub input{font-family:inherit;font-size:12px;border:1px solid #ccc;padding:7px 10px;width:160px;outline:none;background:#fff;border-radius:0;}
+.nav-sub input::placeholder{color:#c4c0ba;}
+.nav-sub button{font-family:inherit;font-size:12px;background:#1a1a1a;color:#fff;border:none;padding:7px 14px;cursor:pointer;white-space:nowrap;}
+.nav-sub button:hover{background:#333;}
+
+.page{max-width:1060px;margin:0 auto;padding:48px 40px 100px;position:relative;}
+.content{max-width:540px;margin-left:auto;position:relative;}
+
+h1{font-size:40px;font-weight:700;line-height:1.18;margin-bottom:16px;letter-spacing:-.3px;}
+
+.meta{font-size:13px;color:#aaa;margin-bottom:48px;font-weight:400;}
+.meta .bar{margin:0 8px;color:#ccc;}
+
+.body h2{font-size:19px;font-weight:700;margin:40px 0 16px;}
+.body p{font-size:15px;color:#3a3a3a;line-height:1.85;margin-bottom:20px;}
+.body strong{font-weight:600;}
+.body em{font-style:italic;}
+
+.a{color:#c47a3a;cursor:pointer;border-bottom:1px solid transparent;transition:border-color .2s;text-decoration:none;}
+.a:hover,.a.on{border-bottom-color:#c47a3a;}
+
+/* ── MARGIN NOTES — no dashed line ── */
+.mn{
+  position:absolute;
+  right:calc(100% + 48px);
+  width:195px;
+  opacity:0;
+  transform:translateY(5px);
+  transition:opacity .35s, transform .35s;
+  pointer-events:none;
+  z-index:10;
+}
+.mn.show{opacity:1;transform:translateY(0);pointer-events:auto;}
+
+/* Single title — larger */
+.mn-ttl{font-size:22px;font-weight:600;color:#1a1a1a;margin-bottom:3px;}
+.mn-ph{font-size:12.5px;color:#aaa;font-style:italic;margin-bottom:7px;}
+.mn-txt{font-size:12px;color:#888;line-height:1.55;margin-bottom:7px;}
+.mn-txt .hl{color:#c47a3a;font-weight:500;}
+.mn-lnk{font-size:12px;color:#c47a3a;text-decoration:none;}
+.mn-lnk:hover{text-decoration:underline;}
+.mn-lnk::after{content:' ↗';font-size:10px;}
+
+.refs{background:#f3ede5;border-radius:6px;padding:30px 34px;margin-top:48px;}
+.refs h3{font-size:16px;font-weight:600;margin-bottom:16px;}
+.refs ol{padding-left:16px;}
+.refs li{font-size:13px;color:#555;line-height:1.6;margin-bottom:5px;list-style-type:lower-alpha;}
+
+hr{border:none;border-top:1px solid #e8e4df;margin:72px 0 0;}
+
+.sub{text-align:center;padding:60px 40px;background:#f5f2ed;}
+.sub-row{display:flex;justify-content:center;max-width:400px;margin:0 auto 12px;}
+.sub-btn{font-family:inherit;font-size:13px;background:#1a1a1a;color:#fff;border:none;padding:11px 22px;cursor:pointer;transition:background .3s;}
+.sub-btn:hover{background:#333;}
+.sub-in{font-family:inherit;font-size:13px;border:1px solid #ccc;border-left:none;padding:11px 14px;flex:1;outline:none;background:#fff;}
+.sub-in::placeholder{color:#c4c0ba;}
+.sub-note{font-size:11px;color:#b0a99e;line-height:1.5;max-width:340px;margin:0 auto;}
+
+.star{text-align:center;padding:32px 0 48px;font-size:24px;color:#c4a86a;}
+
+@media(max-width:900px){
+  .content{margin-left:0;max-width:100%;}
+  .mn{display:none;}
+}
+</style>
+</head>
+<body>
+
+<nav>
+  <a href="index.html">Home</a>
+  <a href="#">Writing</a>
+  <div class="nav-sub">
+    <input type="email" placeholder="e-mail address">
+    <button>Subscribe</button>
+  </div>
+</nav>
+
+<div class="page">
+  <div class="content" id="col">
+
+    <h1>Article or Intro Title Goes Here</h1>
+    <div class="meta">written by Harry Gandhi <span class="bar">|</span> Aug 28 , 2025</div>
+
+    <div class="body">
+      <h2>Lorem ipsum dolor sit amet consectetur.</h2>
+
+      <p>Eu fermentum dui velit diam morbi aliquam sem. Vitae ut pulvinar sapien gravida nibh est tristique habitasse. Id mattis netus lacus velit turpis tellus. –Neque nam <span class="a" data-n="fn1">consectetur consectetur sed porta felis. Sit ut amet odio</span> fermentum imperdiet.</p>
+
+      <p>Semper donec vel massa ac cras nisl. Sagittis scelerisque risus faucibus integer purus blandit etiam luctus. Vitae neque at in non luctus <strong>iaculis</strong> ac. Nisl praesent dictum mauris faucibus sed commodo pretium mattis. Accumsan <span class="a" data-n="def1">pellentesque orci amet porta</span> at purus dui. Proin libero nec auctor vivamus elit. Sed in tincidunt consectetur id diam vitae amet.</p>
+
+      <h2>Lorem ipsum dolor</h2>
+
+      <p>Est sagittis integer nulla risus pharetra sit vel. Diam aenean est amet scelerisque cum non. At dictumst in id consequat tellus in. Morbi ut fusce ultrices egestas <em>mauris sollicitudin. Sed id urna at mauris nunc bibendum</em> ac. Fringilla diam facilisi consectetur sed nullam eget in. Et pellentesque iaculis sodales enim in at. Mauris egestas non egestas aliquet sit dui vel elit est. Turpis consequat tempus <strong><span class="a" data-n="def2">ullamcorper elementum</span></strong> in enim ipsum auctor ornare. Mi molestie massa facilisis scelerisque proin amet cursus ut. Aliquam feugiat netus neque eu id elit odio pellentesque duis. Phasellus ipsum at tortor scelerisque nullam pharetra sed.</p>
+
+      <p>Nulla proin diam ligula dictum cras ultrices leo pulvinar. Vitae orci aliquet odio donec a id. Id in est orci tempus quis consequat at. Vel tortor aliquam sed turpis diam proin. Mattis lobortis mauris faucibus id dolor justo phasellus.</p>
+
+      <p>Pulvinar mi enim sed ipsum aliquam pellentesque odio eget. Sed sit eros et eget sed. Amet sed sit placerat venenatis. Aenean adipiscing arcu condimentum magna eu habitasse. Elementum consequat semper pulvinar ac. Amet tortor cras in ultrices. Nullam velit bibendit <em>duis</em> eu. <strong>Sagittis tincidunt</strong> consectetur vitae ultrices dictum sed in. Convallis semper ultrices vulputate mi consequat tempus aliquet amet.</p>
+
+      <p>Lorem ipsum dolor sit amet consectetur. Eu fermentum dui velit diam morbi aliquam sem. Vitae ut pulvinar sapien gravida nibh est tristique habitasse. Id mattis netus lacus velit turpis tellus. Neque nam consectetur consectetur sed porta felis. Sit ut amet odio fermentum imperdiet.</p>
+
+      <p>Semper donec vel massa ac cras nisl. Sagittis scelerisque risus faucibus integer purus blandit etiam luctus. Vitae neque at in non luctus iaculis ac. Nisl praesent dictum mauris faucibus sed commodo pretium mattis. Accumsan <span class="a" data-n="def3">pellentesque orci amet porta</span> at purus dui. Proin libero nec auctor vivamus elit. Sed in tincidunt consectetur id diam vitae amet.</p>
+
+      <p>Est sagittis integer nulla risus pharetra sit vel. Diam aenean est amet scelerisque cum non. At dictumst in id consequat tellus in. Morbi ut fusce ultrices egestas mauris sollicitudin. Sed id urna at mauris nunc bibendum ac. Fringilla diam facilisi consectetur sed nullam eget in. Et pellentesque iaculis sodales enim in at. <span class="a" data-n="def4">Mauris egestas non</span> egestas aliquet sit dui vel elit est. Turpis consequat tempus ullamcorper elementum in enim ipsum auctor ornare. Mi molestie massa facilisis scelerisque proin amet cursus ut. Aliquam feugiat netus neque eu id elit odio pellentesque duis. Phasellus ipsum at tortor scelerisque nullam pharetra sed.</p>
+
+      <p>Nulla proin diam ligula dictum cras ultrices leo pulvinar. Vitae orci aliquet odio donec a id. Id in est orci tempus quis consequat at. Vel tortor aliqua...</p>
+
+      <div class="refs">
+        <h3>References &amp; Inspiration</h3>
+        <ol>
+          <li>"Mind, Matter and the Implicate Order" by David Bohm (1980).</li>
+          <li>"Panpsychism" by Thomas Nagel in his collection "Mortal Questions" (1979).</li>
+          <li>Galen Strawson's "Consciousness and Its Place in Nature" (2006).</li>
+          <li>"Facing Up to the Problem of Consciousness" by David Chalmers (1995).</li>
+        </ol>
+      </div>
+    </div>
+  </div>
+</div>
+
+<hr>
+
+<div style="text-align:center;padding:40px 40px 20px;font-size:12px;color:#b0a99e;">Made with ❤️ by Harry, Nazifa, and Claude</div>
+
+<div class="star">✦</div>
+
+<script>
+/* ═══════════════════════════════════════════════════════════
+   CONFIGURATION — Replace with your actual values
+   ═══════════════════════════════════════════════════════════ */
+const NOTION_API_KEY = 'ntn_YOUR_KEY_HERE';
+const NOTION_HEADERS = {
+  'Authorization': 'Bearer ' + 'ntn_YOUR_KEY_HERE',
+  'Notion-Version': '2022-06-28',
+  'Content-Type': 'application/json'
+};
+
+/* ═══════════════════════════════════════════════════════════
+   NOTION BLOCK RENDERER
+   ═══════════════════════════════════════════════════════════ */
+function richTextToHTML(richTexts){
+  if(!richTexts) return '';
+  return richTexts.map(rt => {
+    let text = rt.plain_text || '';
+    text = text.replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;');
+    if(rt.annotations){
+      if(rt.annotations.bold) text = `<strong>${text}</strong>`;
+      if(rt.annotations.italic) text = `<em>${text}</em>`;
+      if(rt.annotations.strikethrough) text = `<s>${text}</s>`;
+      if(rt.annotations.underline) text = `<u>${text}</u>`;
+      if(rt.annotations.code) text = `<code>${text}</code>`;
+      // Orange text = annotation trigger
+      if(rt.annotations.color === 'orange' || rt.annotations.color === 'orange_background'){
+        const trigger = rt.plain_text.trim().toLowerCase();
+        text = `<span class="a" data-trigger="${trigger}">${text}</span>`;
+      }
+    }
+    if(rt.href) text = `<a href="${rt.href}" target="_blank" style="color:#c47a3a;">${text}</a>`;
+    return text;
+  }).join('');
+}
+
+function blocksToHTML(blocks){
+  let html = '';
+  for(const block of blocks){
+    // Skip child_database blocks (we handle those separately for annotations)
+    if(block.type === 'child_database') continue;
+    switch(block.type){
+      case 'heading_1':
+        html += `<h2>${richTextToHTML(block.heading_1.rich_text)}</h2>`;break;
+      case 'heading_2':
+        html += `<h2>${richTextToHTML(block.heading_2.rich_text)}</h2>`;break;
+      case 'heading_3':
+        html += `<h3>${richTextToHTML(block.heading_3.rich_text)}</h3>`;break;
+      case 'paragraph':
+        const pText = richTextToHTML(block.paragraph.rich_text);
+        if(pText) html += `<p>${pText}</p>`;break;
+      case 'bulleted_list_item':
+        html += `<ul><li>${richTextToHTML(block.bulleted_list_item.rich_text)}</li></ul>`;break;
+      case 'numbered_list_item':
+        html += `<ol><li>${richTextToHTML(block.numbered_list_item.rich_text)}</li></ol>`;break;
+      case 'quote':
+        html += `<blockquote style="border-left:3px solid #c47a3a;padding-left:16px;color:#666;margin:20px 0;">${richTextToHTML(block.quote.rich_text)}</blockquote>`;break;
+      case 'divider':
+        html += '<hr style="border:none;border-top:1px solid #e8e4df;margin:32px 0;">';break;
+      case 'image':
+        const imgUrl = block.image.file?.url || block.image.external?.url || '';
+        if(imgUrl) html += `<img src="${imgUrl}" style="width:100%;margin:20px 0;border-radius:4px;" alt="">`;break;
+      case 'callout':
+        html += `<div class="refs"><h3>${block.callout.icon?.emoji||''} ${richTextToHTML(block.callout.rich_text)}</h3></div>`;break;
+    }
+  }
+  html = html.replace(/<\/ul>\s*<ul>/g,'').replace(/<\/ol>\s*<ol>/g,'');
+  return html;
+}
+
+/* ═══════════════════════════════════════════════════════════
+   FETCH ANNOTATIONS from inline "Annotations" database
+   
+   In Notion, each essay has an inline database at the bottom.
+   Database columns:
+     Trigger (title)  — the orange text to match
+     Label (text)     — "Definition", "[ 1 ]", etc.
+     Body (text)      — the popup content
+     Phonetic (text)  — optional, e.g. /ˌdefəˈniSHən/
+     Link (url)       — optional link
+   ═══════════════════════════════════════════════════════════ */
+async function fetchAnnotations(blocks){
+  // Find the child_database block
+  const dbBlock = blocks.find(b => b.type === 'child_database');
+  if(!dbBlock) return [];
+
+  try{
+    const res = await fetch(`https://api.notion.com/v1/databases/${dbBlock.id}/query`, {
+      method: 'POST',
+      headers: NOTION_HEADERS,
+      body: JSON.stringify({})
+    });
+    if(!res.ok) return [];
+    const data = await res.json();
+
+    return data.results.map(row => {
+      const props = row.properties;
+      return {
+        trigger: (props.Trigger?.title?.[0]?.plain_text || '').trim().toLowerCase(),
+        label: props.Label?.rich_text?.[0]?.plain_text || '',
+        body: props.Body?.rich_text?.[0]?.plain_text || '',
+        phonetic: props.Phonetic?.rich_text?.[0]?.plain_text || '',
+        link: props.Link?.url || ''
+      };
+    }).filter(a => a.trigger);
+  } catch(e){
+    console.error('Failed to fetch annotations:', e);
+    return [];
+  }
+}
+
+/* ═══════════════════════════════════════════════════════════
+   WIRE UP MARGIN NOTES
+   Matches data-trigger attributes on .a spans to annotations
+   ═══════════════════════════════════════════════════════════ */
+function wireUpAnnotations(annotations){
+  const col = document.getElementById('col');
+  const HOVER_DELAY = 600;
+  const hideTimers = {};
+
+  // Create margin note elements for each annotation
+  const noteEls = {};
+  annotations.forEach((ann, i) => {
+    const el = document.createElement('div');
+    el.className = 'mn';
+    el.id = 'mn-' + i;
+
+    let h = '';
+    if(ann.label) h += `<div class="mn-ttl">${ann.label}</div>`;
+    if(ann.phonetic) h += `<div class="mn-ph">${ann.phonetic}</div>`;
+    if(ann.body) h += `<div class="mn-txt">${ann.body}</div>`;
+    if(ann.link) h += `<a class="mn-lnk" href="${ann.link}">Link</a>`;
+
+    el.innerHTML = h;
+    col.appendChild(el);
+    noteEls[ann.trigger] = { el, idx: i };
+  });
+
+  // Match .a spans to annotations by trigger text
+  document.querySelectorAll('.a[data-trigger]').forEach(span => {
+    const trigger = span.dataset.trigger;
+    const match = noteEls[trigger];
+    if(!match) return;
+
+    const note = match.el;
+    const k = match.idx;
+
+    function show(){
+      if(hideTimers[k]){ clearTimeout(hideTimers[k]); hideTimers[k]=null; }
+      document.querySelectorAll('.mn.show').forEach(n=>{ if(n!==note) n.classList.remove('show'); });
+      document.querySelectorAll('.a.on').forEach(n=>{ if(n!==span) n.classList.remove('on'); });
+      const sr = span.getBoundingClientRect(), cr = col.getBoundingClientRect();
+      note.style.top = (sr.top - cr.top) + 'px';
+      note.classList.add('show');
+      span.classList.add('on');
+    }
+
+    function scheduleHide(){
+      hideTimers[k] = setTimeout(()=>{
+        if(!note.matches(':hover') && !span.matches(':hover')){
+          note.classList.remove('show');
+          span.classList.remove('on');
+        }
+      }, HOVER_DELAY);
+    }
+
+    span.addEventListener('mouseenter', show);
+    span.addEventListener('mouseleave', scheduleHide);
+    note.addEventListener('mouseenter', ()=>{ if(hideTimers[k]){ clearTimeout(hideTimers[k]); hideTimers[k]=null; }});
+    note.addEventListener('mouseleave', scheduleHide);
+  });
+}
+
+/* ═══════════════════════════════════════════════════════════
+   MAIN — FETCH PAGE + ANNOTATIONS FROM NOTION
+   ═══════════════════════════════════════════════════════════ */
+async function loadPost(){
+  // If not configured, use static demo content + static annotations
+  if(NOTION_API_KEY === 'ntn_YOUR_KEY_HERE'){
+    loadDemoAnnotations();
+    return;
+  }
+
+  const params = new URLSearchParams(window.location.search);
+  const pageId = params.get('id');
+  if(!pageId){ loadDemoAnnotations(); return; }
+
+  try{
+    // 1. Fetch page metadata
+    const pageRes = await fetch(`https://api.notion.com/v1/pages/${pageId}`, {
+      headers: NOTION_HEADERS
+    });
+    const page = await pageRes.json();
+
+    // 2. Fetch all blocks (may need pagination for long essays)
+    let allBlocks = [];
+    let hasMore = true;
+    let startCursor = undefined;
+
+    while(hasMore){
+      const url = `https://api.notion.com/v1/blocks/${pageId}/children?page_size=100${startCursor ? '&start_cursor='+startCursor : ''}`;
+      const blocksRes = await fetch(url, { headers: NOTION_HEADERS });
+      const blocksData = await blocksRes.json();
+      allBlocks = allBlocks.concat(blocksData.results);
+      hasMore = blocksData.has_more;
+      startCursor = blocksData.next_cursor;
+    }
+
+    // 3. Extract metadata
+    const title = page.properties?.Title?.title?.[0]?.plain_text || 'Untitled';
+    const author = page.properties?.Author?.rich_text?.[0]?.plain_text || 'Harry Gandhi';
+    const date = page.properties?.['Published Date']?.date?.start || '';
+    const formattedDate = date ? new Date(date).toLocaleDateString('en-US',{year:'numeric',month:'short',day:'numeric'}) : '';
+
+    // 4. Render content (excluding the annotation database)
+    document.querySelector('h1').textContent = title;
+    document.querySelector('.meta').innerHTML = `written by ${author}${formattedDate ? ` <span class="bar">|</span> ${formattedDate}` : ''}`;
+    document.querySelector('.body').innerHTML = blocksToHTML(allBlocks);
+    document.title = `${title} — Harry Gandhi`;
+
+    // 5. Fetch and wire up annotations from inline database
+    const annotations = await fetchAnnotations(allBlocks);
+    if(annotations.length > 0){
+      wireUpAnnotations(annotations);
+    }
+
+  } catch(e){
+    console.error('Failed to load from Notion:', e);
+    loadDemoAnnotations();
+  }
+}
+
+/* ═══════════════════════════════════════════════════════════
+   DEMO ANNOTATIONS — for static fallback content
+   ═══════════════════════════════════════════════════════════ */
+function loadDemoAnnotations(){
+  const demoAnnotations = [
+    {trigger:'consectetur consectetur sed porta felis. sit ut amet odio', label:'[ 1 ]', body:'Semper donec vel massa ac cras nisl. Sagittis scelerisque risus faucibus integer purus blandit etiam luctus.', phonetic:'', link:'#'},
+    {trigger:'pellentesque orci amet porta', label:'Definition', body:'Semper donec vel massa ac cras nisl. Sagittis scelerisque risus faucibus integer purus blandit etiam luctus.', phonetic:'/ˌdefəˈniSHən/', link:'#'},
+    {trigger:'ullamcorper elementum', label:'Definition', body:'Semper donec vel massa ac cras nisl. Sagittis scelerisque risus faucibus integer purus blandit.', phonetic:'/ˌdefəˈniSHən/', link:'#'},
+    {trigger:'mauris egestas non', label:'Definition', body:'Semper donec vel massa ac cras nisl. Sagittis scelerisque risus faucibus.', phonetic:'/ˈmɔːrɪs/', link:'#'},
+  ];
+  wireUpAnnotations(demoAnnotations);
+}
+
+loadPost();
+</script>
+</body>
+</html>

@@ -1,0 +1,377 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Harry Gandhi</title>
+<link href="https://fonts.googleapis.com/css2?family=Brygada+1918:ital,wght@0,400;0,500;0,600;0,700;1,400;1,500;1,600;1,700&display=swap" rel="stylesheet">
+<style>
+*{margin:0;padding:0;box-sizing:border-box;}
+html,body{width:100%;overflow-x:hidden;font-family:'Brygada 1918',serif;background:#faf8f5;color:#1a1a1a;}
+
+nav{position:fixed;top:0;right:0;z-index:100;display:flex;align-items:center;gap:28px;padding:22px 48px;transition:transform .4s,opacity .4s;}
+nav.hidden{transform:translateY(-100%);opacity:0;}
+nav a{color:#1a1a1a;text-decoration:none;font-size:14px;letter-spacing:.3px;transition:opacity .3s;}
+nav a:hover{opacity:.5;}
+.nav-sub{display:flex;align-items:center;gap:0;margin-left:8px;}
+.nav-sub input{font-family:inherit;font-size:12px;border:1px solid #ccc;padding:7px 10px;width:160px;outline:none;background:#fff;border-radius:0;}
+.nav-sub input::placeholder{color:#c4c0ba;}
+.nav-sub button{font-family:inherit;font-size:12px;background:#1a1a1a;color:#fff;border:none;padding:7px 14px;cursor:pointer;}
+.nav-sub button:hover{background:#333;}
+
+.page{display:flex;min-height:100vh;}
+
+.left{width:50%;padding:100px 40px 100px 60px;position:relative;z-index:1;}
+.masonry{column-count:2;column-gap:24px;}
+.masonry>*{break-inside:avoid;margin-bottom:24px;}
+
+/* Text essay card */
+.card{
+  background:#fff;padding:28px 28px 24px;
+  box-shadow:0 2px 12px rgba(0,0,0,0.05),0 1px 3px rgba(0,0,0,0.04);
+  cursor:pointer;transition:transform .3s,box-shadow .3s;position:relative;
+}
+.card:hover{transform:translateY(-2px) rotate(0deg)!important;box-shadow:0 6px 20px rgba(0,0,0,0.09);}
+.card .tape{position:absolute;top:-7px;width:44px;height:14px;background:rgba(200,190,170,0.4);border-radius:1px;}
+
+/* Highlight colors */
+.card.sage{background:#d4dbc8;}
+.card.rose{background:#dfc8c4;}
+.card.gold{background:#ddd5b8;}
+.card.lavender{background:#cec8d8;}
+
+.card h3{font-size:22px;font-weight:700;line-height:1.18;margin-bottom:5px;letter-spacing:-.2px;}
+.card .author{font-size:11px;color:#aaa;margin-bottom:4px;}
+.card .preview{font-size:12px;color:#999;line-height:1.5;}
+.card.sage .preview,.card.rose .preview,.card.gold .preview,.card.lavender .preview{color:#666;}
+
+/* Image essay card */
+.card-img{
+  background:#fff;padding:0;overflow:hidden;
+  box-shadow:0 2px 12px rgba(0,0,0,0.06),0 1px 3px rgba(0,0,0,0.04);
+  cursor:pointer;transition:transform .3s,box-shadow .3s;position:relative;
+}
+.card-img:hover{transform:translateY(-2px) rotate(0deg)!important;box-shadow:0 6px 20px rgba(0,0,0,0.09);}
+.card-img img{width:100%;display:block;object-fit:cover;height:200px;}
+.card-img .overlay{padding:16px 20px;background:#fff;}
+.card-img .overlay h3{font-size:18px;font-weight:700;line-height:1.2;margin-bottom:3px;}
+.card-img .overlay .preview{font-size:11px;color:#999;line-height:1.45;}
+
+/* Art-only postcard */
+.art-card{
+  background:#fff;padding:6px;
+  box-shadow:0 3px 16px rgba(0,0,0,0.08),0 1px 4px rgba(0,0,0,0.04);
+  cursor:default;transition:transform .3s;position:relative;
+}
+.art-card img{width:100%;display:block;object-fit:cover;}
+
+/* Loading state */
+.loading{text-align:center;padding:60px 20px;color:#bbb;font-size:14px;}
+
+/* Right side */
+.right{
+  width:50%;position:fixed;top:0;right:0;bottom:0;
+  display:flex;align-items:center;justify-content:center;padding:0 60px;
+}
+.intro{max-width:460px;}
+.intro .opening{font-size:26px;font-weight:500;line-height:1.35;margin-bottom:28px;letter-spacing:-.2px;}
+.intro .opening em{font-style:italic;font-weight:600;position:relative;display:inline;}
+.intro .opening em::before{
+  content:'';position:absolute;left:-8px;right:-8px;top:8%;bottom:2%;
+  background:rgba(158,175,72,0.22);filter:url(#watercolor);z-index:-1;
+}
+.intro .between{font-size:16px;font-weight:400;line-height:1.75;color:#555;margin-bottom:28px;white-space:nowrap;}
+.intro .closing{font-size:28px;font-weight:500;line-height:1.3;margin-bottom:24px;letter-spacing:-.15px;}
+.intro .closing .beauty{position:relative;display:inline;}
+.intro .closing .beauty::before{
+  content:'';position:absolute;left:0px;right:0px;top:18%;bottom:12%;
+  background:rgba(88,135,55,0.38);filter:url(#watercolor);z-index:-1;
+}
+.intro .whisper{font-size:13px;color:#aaa;font-weight:400;line-height:1.5;font-style:italic;}
+
+.footer-bar{
+  position:fixed;bottom:0;left:0;right:0;
+  display:flex;justify-content:center;align-items:center;
+  padding:18px 40px;font-size:12px;color:#b0a99e;
+  background:rgba(250,248,245,0.92);backdrop-filter:blur(4px);z-index:2;
+}
+
+@media(max-width:900px){
+  .page{flex-direction:column-reverse;}
+  .left,.right{width:100%;}
+  .right{position:relative;padding:100px 28px 40px;}
+  .left{padding:40px 20px 100px;}
+  .masonry{column-count:1;}
+  .intro .opening{font-size:22px;}
+  .intro .closing{font-size:28px;}
+  .intro .between{white-space:normal;}
+}
+</style>
+</head>
+<body>
+
+<svg style="position:absolute;width:0;height:0;" aria-hidden="true">
+  <defs>
+    <filter id="watercolor" x="-20%" y="-20%" width="140%" height="140%">
+      <feTurbulence type="fractalNoise" baseFrequency="0.04 0.06" numOctaves="4" seed="2" result="noise"/>
+      <feDisplacementMap in="SourceGraphic" in2="noise" scale="12" xChannelSelector="R" yChannelSelector="G" result="displaced"/>
+      <feTurbulence type="fractalNoise" baseFrequency="0.08" numOctaves="3" seed="5" result="texture"/>
+      <feColorMatrix in="texture" type="saturate" values="0" result="bwTexture"/>
+      <feComposite in="displaced" in2="bwTexture" operator="in" result="textured"/>
+      <feGaussianBlur in="textured" stdDeviation="0.8" result="softened"/>
+      <feComposite in="softened" in2="SourceGraphic" operator="over"/>
+    </filter>
+  </defs>
+</svg>
+
+<nav id="nav">
+  <a href="#">Home</a>
+  <a href="#">Writing</a>
+  <div class="nav-sub">
+    <input type="email" id="subEmail" placeholder="e-mail address">
+    <button onclick="subscribe()">Subscribe</button>
+  </div>
+</nav>
+
+<div class="page">
+  <div class="left">
+    <div class="masonry" id="masonry">
+      <div class="loading">Loading essays...</div>
+    </div>
+  </div>
+
+  <div class="right">
+    <div class="intro">
+      <p class="opening">I write about life in<br>the <em>in-between</em> spaces,</p>
+      <div class="between">
+        Between the heavens and hell,<br>
+        Between fear and freedom,<br>
+        Between the crazy and the crazy awesome,<br>
+        Between the idea and the reality,<br>
+        Between the stranger and the friend,<br>
+        Between the mess and the masterpiece,<br>
+        Between the leap and the landing,
+      </div>
+      <p class="closing">For this is where <span class="beauty">beauty</span> lies.</p>
+      <p class="whisper">(and also other ramblings about this and other realities)</p>
+    </div>
+  </div>
+</div>
+
+<div class="footer-bar">Made with ❤️ by Harry, Nazifa, and Claude</div>
+
+<script>
+/* ═══════════════════════════════════════════════════════════
+   CONFIGURATION — Replace these with your actual values
+   ═══════════════════════════════════════════════════════════ */
+const NOTION_API_KEY = 'ntn_YOUR_KEY_HERE';
+const NOTION_DATABASE_ID = 'YOUR_DATABASE_ID_HERE';
+
+// MailerLite (optional — for subscribe button)
+const MAILERLITE_API_KEY = 'YOUR_MAILERLITE_API_KEY';
+const MAILERLITE_GROUP_ID = 'YOUR_GROUP_ID';
+
+/* ═══════════════════════════════════════════════════════════
+   NAV — hide on scroll
+   ═══════════════════════════════════════════════════════════ */
+let lastY=0;
+const navEl=document.getElementById('nav');
+addEventListener('scroll',()=>{
+  const y=scrollY;
+  if(y>80&&y>lastY) navEl.classList.add('hidden');
+  else navEl.classList.remove('hidden');
+  lastY=y;
+},{passive:true});
+
+/* ═══════════════════════════════════════════════════════════
+   SUBSCRIBE — MailerLite integration
+   ═══════════════════════════════════════════════════════════ */
+async function subscribe(){
+  const email = document.getElementById('subEmail').value.trim();
+  if(!email || !email.includes('@')){alert('Please enter a valid email.');return;}
+
+  // If MailerLite is not configured yet, just show confirmation
+  if(MAILERLITE_API_KEY === 'YOUR_MAILERLITE_API_KEY'){
+    alert('Thanks for subscribing! (MailerLite not configured yet — email saved locally)');
+    console.log('Subscriber email:', email);
+    document.getElementById('subEmail').value = '';
+    return;
+  }
+
+  try{
+    const res = await fetch('https://connect.mailerlite.com/api/subscribers',{
+      method:'POST',
+      headers:{'Content-Type':'application/json','Authorization':'Bearer '+MAILERLITE_API_KEY},
+      body:JSON.stringify({email, groups:[MAILERLITE_GROUP_ID]})
+    });
+    if(res.ok){
+      alert('Thanks for subscribing!');
+      document.getElementById('subEmail').value = '';
+    } else {
+      alert('Something went wrong. Please try again.');
+    }
+  }catch(e){
+    alert('Something went wrong. Please try again.');
+    console.error(e);
+  }
+}
+
+/* ═══════════════════════════════════════════════════════════
+   NOTION API — Fetch published posts
+   ═══════════════════════════════════════════════════════════ */
+const masonry = document.getElementById('masonry');
+
+// Rotation values for scrapbook feel
+const rotations = [-0.5, 1.2, -0.6, 0.4, -0.8, 0.7, 0.9, 0.5, -0.3, -1.1, 0.3, -0.7];
+
+// Card color map
+const colorMap = {
+  'sage':'sage','rose':'rose','gold':'gold','lavender':'lavender','white':''
+};
+
+async function fetchPosts(){
+  // If Notion is not configured, show demo data
+  if(NOTION_API_KEY === 'ntn_YOUR_KEY_HERE'){
+    renderDemoData();
+    return;
+  }
+
+  try{
+    const res = await fetch(`https://api.notion.com/v1/databases/${NOTION_DATABASE_ID}/query`,{
+      method:'POST',
+      headers:{
+        'Authorization':'Bearer '+NOTION_API_KEY,
+        'Notion-Version':'2022-06-28',
+        'Content-Type':'application/json'
+      },
+      body:JSON.stringify({
+        filter:{property:'Status',select:{equals:'Published'}},
+        sorts:[{property:'Order',direction:'ascending'}]
+      })
+    });
+
+    if(!res.ok) throw new Error('Notion API error: '+res.status);
+    const data = await res.json();
+    renderPosts(data.results);
+  }catch(e){
+    console.error('Failed to fetch from Notion:', e);
+    masonry.innerHTML = '<div class="loading">Could not load essays. Showing demo data.</div>';
+    setTimeout(renderDemoData, 1000);
+  }
+}
+
+function renderPosts(pages){
+  masonry.innerHTML = '';
+
+  pages.forEach((page, i) => {
+    const props = page.properties;
+    const title = props.Title?.title?.[0]?.plain_text || 'Untitled';
+    const slug = props.Slug?.rich_text?.[0]?.plain_text || '';
+    const preview = props.Preview?.rich_text?.[0]?.plain_text || '';
+    const author = props.Author?.rich_text?.[0]?.plain_text || '';
+    const cardType = props['Card Type']?.select?.name || 'text';
+    const cardColor = props['Card Color']?.select?.name || 'white';
+    const imageFile = props['Card Image']?.files?.[0];
+    const imageUrl = imageFile?.file?.url || imageFile?.external?.url || '';
+
+    const rot = rotations[i % rotations.length];
+
+    if(cardType === 'art-only'){
+      // Art postcard — no link
+      if(imageUrl){
+        const el = document.createElement('div');
+        el.className = 'art-card';
+        el.style.transform = `rotate(${rot}deg)`;
+        el.innerHTML = `<img src="${imageUrl}" alt="${title}">`;
+        masonry.appendChild(el);
+      }
+    } else if(cardType === 'image' && imageUrl){
+      // Image essay card
+      const el = document.createElement('div');
+      el.className = 'card-img';
+      el.style.transform = `rotate(${rot}deg)`;
+      el.onclick = () => location.href = `blog-post.html?slug=${slug}&id=${page.id}`;
+      el.innerHTML = `
+        <img src="${imageUrl}" alt="">
+        <div class="overlay">
+          <h3>${title}</h3>
+          ${preview ? `<div class="preview">${preview}</div>` : ''}
+        </div>`;
+      masonry.appendChild(el);
+    } else {
+      // Text essay card
+      const colorClass = colorMap[cardColor] || '';
+      const el = document.createElement('div');
+      el.className = 'card' + (colorClass ? ' '+colorClass : '');
+      el.style.transform = `rotate(${rot}deg)`;
+      el.onclick = () => location.href = `blog-post.html?slug=${slug}&id=${page.id}`;
+
+      // Tape position varies
+      const tapeStyles = [
+        'left:20px;transform:rotate(-2deg)',
+        'right:20px;transform:rotate(2deg)',
+        'left:50%;margin-left:-22px;transform:rotate(-1deg)'
+      ];
+
+      el.innerHTML = `
+        <div class="tape" style="${tapeStyles[i%3]}"></div>
+        <h3>${title}</h3>
+        ${author ? `<div class="author">by ${author}</div>` : ''}
+        ${preview ? `<div class="preview">${preview}</div>` : ''}`;
+      masonry.appendChild(el);
+    }
+  });
+}
+
+/* ═══════════════════════════════════════════════════════════
+   DEMO DATA — shown when Notion API is not yet configured
+   ═══════════════════════════════════════════════════════════ */
+function renderDemoData(){
+  const demo = [
+    {title:"All in a Day's Work", preview:"Nemo enim ipsam voluptatem quia voluptas sit aspernatur aut odit aut fugit, sed quia.", type:"text", color:"white"},
+    {title:"", type:"art", image:"hak6.jpeg"},
+    {title:"In this world", preview:"In this world, we walk on the roof of hell, gazing at flowers.", type:"image", image:"hak2.jpeg"},
+    {title:"Onto death", author:"Harry Gandhi", preview:"When I die, I want them to cry, and smile, for I will have lived.", type:"text", color:"white"},
+    {title:"", type:"art", image:"hak3.jpeg"},
+    {title:"Liberation: Kun Faya Kun", preview:"Nemo enim ipsam voluptatem quia voluptas sit aspernatur aut odit aut fugit, sed quia.", type:"text", color:"gold"},
+    {title:"", type:"art", image:"hak5.jpeg"},
+    {title:"The Debt Heuristic", preview:"Nemo enim ipsam voluptatem quia voluptas sit aspernatur aut odit aut fugit.", type:"image", image:"hak4.jpeg"},
+    {title:"Zombies, Robots, and Plastics", preview:"Nemo enim ipsam voluptatem quia voluptas sit aspernatur aut odit aut fugit, sed quia.", type:"text", color:"sage"},
+    {title:"", type:"art", image:"hak1.jpeg"},
+  ];
+
+  masonry.innerHTML = '';
+  demo.forEach((item, i) => {
+    const rot = rotations[i % rotations.length];
+    const tapeStyles = ['left:20px;transform:rotate(-2deg)','right:20px;transform:rotate(2deg)','left:50%;margin-left:-22px;transform:rotate(-1deg)'];
+
+    if(item.type === 'art'){
+      const el = document.createElement('div');
+      el.className = 'art-card';
+      el.style.transform = `rotate(${rot}deg)`;
+      el.innerHTML = `<img src="${item.image}" alt="Hilma af Klint">`;
+      masonry.appendChild(el);
+    } else if(item.type === 'image'){
+      const el = document.createElement('div');
+      el.className = 'card-img';
+      el.style.transform = `rotate(${rot}deg)`;
+      el.onclick = () => location.href = 'blog-post.html';
+      el.innerHTML = `<img src="${item.image}" alt="" style="height:200px;"><div class="overlay"><h3>${item.title}</h3><div class="preview">${item.preview}</div></div>`;
+      masonry.appendChild(el);
+    } else {
+      const colorClass = item.color && item.color !== 'white' ? item.color : '';
+      const el = document.createElement('div');
+      el.className = 'card' + (colorClass ? ' '+colorClass : '');
+      el.style.transform = `rotate(${rot}deg)`;
+      el.onclick = () => location.href = 'blog-post.html';
+      el.innerHTML = `<div class="tape" style="${tapeStyles[i%3]}"></div><h3>${item.title}</h3>${item.author?`<div class="author">by ${item.author}</div>`:''}${item.preview?`<div class="preview">${item.preview}</div>`:''}`;
+      masonry.appendChild(el);
+    }
+  });
+}
+
+// Fetch on load
+fetchPosts();
+</script>
+</body>
+</html>
