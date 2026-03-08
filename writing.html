@@ -23,9 +23,10 @@ nav a:hover{opacity:.5;}
 /* ── Two-column layout ── */
 .right-text{
   width:50%;position:fixed;top:0;right:0;bottom:0;
-  display:flex;align-items:center;justify-content:center;
+  display:flex;flex-direction:column;align-items:center;justify-content:center;
   padding:80px 60px;
 }
+.credit{font-size:11px;color:#b0a99e;position:absolute;bottom:28px;left:0;right:0;text-align:center;}
 .right-inner{max-width:440px;}
 .right-inner h1{font-size:36px;font-weight:700;line-height:1.2;margin-bottom:28px;letter-spacing:-.3px;}
 .right-inner .betweens{font-size:15px;color:#3a3a3a;line-height:2;margin-bottom:32px;}
@@ -129,19 +130,17 @@ nav a:hover{opacity:.5;}
 .hamburger.open span:nth-child(3){transform:rotate(-45deg) translate(5px,-5px);}
 
 @media(max-width:900px){
+  body{display:flex;flex-direction:column;}
   .hamburger{display:flex;}
-  nav{flex-direction:column;align-items:flex-end;padding:16px 24px;gap:0;background:rgba(250,248,245,0.95);}
-  nav a,nav .nav-sub{display:none;width:100%;text-align:right;padding:8px 0;}
-  nav.menu-open a,nav.menu-open .nav-sub{display:block;}
-  nav a{min-height:44px;display:none;align-items:center;justify-content:flex-end;}
+  nav{flex-direction:column;align-items:flex-end;padding:16px 24px;gap:0;background:rgba(250,248,245,0.95);left:0;width:100%;}
+  nav a{display:none;width:100%;text-align:right;padding:8px 0;min-height:44px;align-items:center;justify-content:flex-end;}
+  nav .nav-sub{display:none !important;}
   nav.menu-open a{display:flex;}
-  nav .nav-sub{flex-direction:column;align-items:flex-end;margin-left:0;gap:8px;}
-  nav .nav-sub input{width:100%;}
-  nav .nav-sub button{min-height:44px;}
-  .right-text{width:100%;position:relative;padding:100px 28px 40px;min-height:auto;order:-1;}
+  .right-text{width:100%;position:relative;padding:80px 28px 40px;min-height:auto;order:-1;}
   .right-inner h1{font-size:28px;}
   .right-inner h2{font-size:26px;}
-  .left-grid{width:100%;margin-right:0;padding:40px 20px 100px;}
+  .credit{position:static;margin-top:24px;}
+  .left-grid{width:100%;margin-right:0;padding:40px 20px 100px;order:1;}
   .masonry{column-count:1;}
 }
 </style>
@@ -192,8 +191,8 @@ nav a:hover{opacity:.5;}
     </div>
     <h2>For this is where <span class="wc wc-green">beauty</span> lies.</h2>
     <p class="aside">(and also other ramblings about this and other realities)</p>
-    <p style="font-size:11px;color:#b0a99e;margin-top:32px;">Made with ❤️ by Harry, Nazifa, Om and Claude</p>
   </div>
+  <p class="credit">Made with ❤️ by Harry, Nazifa, Om and Claude</p>
 </div>
 
 
