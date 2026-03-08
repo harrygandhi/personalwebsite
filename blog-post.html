@@ -4,6 +4,7 @@
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
 <title>Article — Harry Gandhi</title>
+<link rel="icon" href="data:image/svg+xml,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 100 100'><text y='.9em' font-size='90'>🌻</text></svg>">
 <link href="https://fonts.googleapis.com/css2?family=Brygada+1918:ital,wght@0,400;0,500;0,600;0,700;1,400;1,500;1,600;1,700&display=swap" rel="stylesheet">
 <style>
 *{margin:0;padding:0;box-sizing:border-box;}
@@ -80,20 +81,95 @@ hr{border:none;border-top:1px solid #e8e4df;margin:72px 0 0;}
 
 .star{text-align:center;padding:32px 0 48px;font-size:24px;color:#c4a86a;}
 
+/* Hamburger — hidden on desktop */
+.hamburger{
+  display:none;background:none;border:none;cursor:pointer;
+  flex-direction:column;gap:5px;padding:8px;z-index:101;
+}
+.hamburger span{display:block;width:22px;height:2px;background:#1a1a1a;transition:transform .3s,opacity .3s;}
+.hamburger.open span:nth-child(1){transform:rotate(45deg) translate(5px,5px);}
+.hamburger.open span:nth-child(2){opacity:0;}
+.hamburger.open span:nth-child(3){transform:rotate(-45deg) translate(5px,-5px);}
+
+/* Footer subscribe */
+.footer-sub{text-align:center;padding:48px 40px 12px;}
+.footer-sub-row{display:flex;justify-content:center;max-width:360px;margin:0 auto;}
+.footer-sub-row input{font-family:inherit;font-size:13px;border:1px solid #ccc;padding:10px 14px;flex:1;outline:none;background:#fff;}
+.footer-sub-row input::placeholder{color:#c4c0ba;}
+.footer-sub-row button{font-family:inherit;font-size:13px;background:#1a1a1a;color:#fff;border:none;padding:10px 20px;cursor:pointer;transition:background .3s;}
+.footer-sub-row button:hover{background:#333;}
+
+/* ── Bottom sheet (mobile annotations) ── */
+.bs-overlay{
+  visibility:hidden;opacity:0;
+  position:fixed;top:0;left:0;right:0;bottom:0;
+  background:rgba(0,0,0,0.4);
+  z-index:1000;
+  transition:opacity .3s,visibility .3s;
+  pointer-events:none;
+}
+.bs-overlay.show{visibility:visible;opacity:1;pointer-events:auto;}
+
+.bs-card{
+  position:fixed;bottom:0;left:0;right:0;
+  background:#fff;
+  border-radius:16px 16px 0 0;
+  padding:28px 28px 40px;
+  max-height:70vh;
+  overflow-y:auto;
+  -webkit-overflow-scrolling:touch;
+  z-index:1001;
+  transform:translateY(100%);
+  transition:transform .35s ease-out;
+}
+.bs-overlay.show .bs-card{transform:translateY(0);}
+
+.bs-close{
+  position:absolute;top:12px;right:16px;
+  background:none;border:none;
+  font-size:24px;color:#999;cursor:pointer;
+  width:44px;height:44px;
+  display:flex;align-items:center;justify-content:center;
+}
+.bs-close:hover{color:#333;}
+
+.bs-ttl{font-size:24px;font-weight:600;color:#1a1a1a;margin-bottom:4px;}
+.bs-ph{font-size:13px;color:#aaa;font-style:italic;margin-bottom:10px;}
+.bs-img{width:100%;border-radius:4px;margin:12px 0;}
+.bs-txt{font-size:14px;color:#555;line-height:1.7;margin-bottom:12px;}
+.bs-lnk{font-size:14px;color:#c47a3a;text-decoration:none;}
+.bs-lnk:hover{text-decoration:underline;}
+.bs-lnk::after{content:' ↗';font-size:11px;}
+
 @media(max-width:900px){
-  .content{margin-left:0;max-width:100%;}
+  .content{margin-left:0;max-width:100%;padding-left:20px;padding-right:20px;}
+  .page{padding:32px 0 80px;}
+  h1{font-size:28px;}
   .mn{display:none;}
+  .hamburger{display:flex;}
+  nav{flex-wrap:wrap;justify-content:flex-end;padding:16px 24px;gap:0;background:rgba(250,248,245,0.95);}
+  nav a,nav .nav-sub{display:none;width:100%;text-align:right;padding:8px 0;}
+  nav.menu-open a,nav.menu-open .nav-sub{display:block;}
+  nav a{min-height:44px;display:none;align-items:center;justify-content:flex-end;}
+  nav.menu-open a{display:flex;}
+  nav .nav-sub{flex-direction:column;align-items:flex-end;margin-left:0;gap:8px;}
+  nav .nav-sub input{width:100%;}
+  nav .nav-sub button{min-height:44px;}
+  .footer-sub-row{flex-direction:column;gap:8px;}
+  .footer-sub-row input{width:100%;}
+  .footer-sub-row button{min-height:44px;}
 }
 </style>
 </head>
 <body>
 
-<nav>
+<nav id="nav">
+  <button class="hamburger" id="hamburger" aria-label="Menu"><span></span><span></span><span></span></button>
   <a href="index.html">Home</a>
   <a href="writing.html">Writing</a>
   <div class="nav-sub">
-    <input type="email" placeholder="e-mail address">
-    <button>Subscribe</button>
+    <input type="email" id="navSubEmail" placeholder="e-mail address">
+    <button onclick="subscribe('navSubEmail')">Subscribe</button>
   </div>
 </nav>
 
@@ -141,15 +217,95 @@ hr{border:none;border-top:1px solid #e8e4df;margin:72px 0 0;}
 
 <hr>
 
-<div style="text-align:center;padding:40px 40px 20px;font-size:12px;color:#b0a99e;">Made with ❤️ by Harry, Nazifa, Om and Claude</div>
+<div class="footer-sub">
+  <div class="footer-sub-row">
+    <input type="email" id="footerSubEmail" placeholder="e-mail address">
+    <button onclick="subscribe('footerSubEmail')">Subscribe</button>
+  </div>
+</div>
+
+<div style="text-align:center;padding:20px 40px;font-size:12px;color:#b0a99e;">Made with ❤️ by Harry, Nazifa, Om and Claude</div>
 
 <div class="star">✦</div>
+
+<!-- Bottom sheet for mobile annotations -->
+<div class="bs-overlay" id="bsOverlay">
+  <div class="bs-card" id="bsCard">
+    <button class="bs-close" id="bsClose" aria-label="Close">&times;</button>
+    <div id="bsContent"></div>
+  </div>
+</div>
 
 <script>
 /* ═══════════════════════════════════════════════════════════
    CONFIGURATION
    Notion API is proxied through /api/notion/* (Netlify Function)
    ═══════════════════════════════════════════════════════════ */
+
+// MailerLite (for subscribe buttons)
+const MAILERLITE_API_KEY = 'eyJ0eXAiOiJKV1QiLCJhbGciOiJSUzI1NiJ9.eyJhdWQiOiI0IiwianRpIjoiY2FhMjdkNDA3ZWRkNjEwMzgxM2Q2MWY0NzYwOTE4ZDJlMGMxMWM4ODA3OTc0YTNlMzE3MWJiYjY2M2ZlYTdlZTdkZDVmZWQyYjBiYmI0ZjYiLCJpYXQiOjE3NzI4NjE3MjEuMDk1NTI2LCJuYmYiOjE3NzI4NjE3MjEuMDk1NTI5LCJleHAiOjQ5Mjg1MzUzMjEuMDg5NjQxLCJzdWIiOiIyMTg4MjM2Iiwic2NvcGVzIjpbXX0.MkaJasS4BO9PppWszc-CwvbQXtPmVGAAskMWPDyZfbvfOnfmADbx8Dm2KyMxPBH3xHy2HNstZTrFKszyaFPLKuNL4N0fZK7RfzvDpnr6UiBRvmtZIgzyyN1_bIJyFLVZVKaXyc207CfTfBbpV6__8ZV95MyJlmwaDUHpdB95ImUQVrchFivQXnAcJDkz9YiWgYTyu3aSNfMNN6GsH1MYzAWGSQtc7NDNKJ3sjvSP9FmWNpQnsJuZ3afMCasGFy0BHxt8oIX4I-JcGU1cRMcxwsGf3CGuBKM99Up41ykQhPoZuqT0SLg792vMMOjApX9trmhtR6k8FjoZQJvqjxRn-K1ATiwmycSmkrxWJFI0gzZbOOMktRIERUJsgpwWhCS3E2hQFRWhTZeWVQGk2ToaUKJU3DkSdg30VjNWRPvpBY23-WB3AoD_1ULy3Rya3o8X3ic27qRy9TYE3GQNoN1vc1PCl5Nfegf7a3mj8sJk087tioJ6jHs23LoeH-hIT58k-_DnxWqGJpLuhbcZXlZxHTgLiTDVHqNdgeqU7fNO4WivohL4ltWaMuQV5qxtfrm_OKG5BXO983GUMw1J3LX4MdYPrXl9QtfDgp1qNalb5ag3fgNGHmBu76GAurK2qkOhkZtEt-YliJum6xCXUVsv0dFYY88i6rZztPBUnLI1Eyo';
+const MAILERLITE_GROUP_ID = '181258728256833207';
+
+/* ═══════════════════════════════════════════════════════════
+   HAMBURGER MENU
+   ═══════════════════════════════════════════════════════════ */
+function toggleMenu(){
+  document.getElementById('hamburger').classList.toggle('open');
+  document.getElementById('nav').classList.toggle('menu-open');
+}
+document.getElementById('hamburger').addEventListener('click', toggleMenu);
+
+/* ═══════════════════════════════════════════════════════════
+   SUBSCRIBE — MailerLite integration
+   ═══════════════════════════════════════════════════════════ */
+async function subscribe(inputId){
+  const input = document.getElementById(inputId);
+  const email = input.value.trim();
+  if(!email || !email.includes('@')){alert('Please enter a valid email.');return;}
+
+  try{
+    const res = await fetch('https://connect.mailerlite.com/api/subscribers',{
+      method:'POST',
+      headers:{'Content-Type':'application/json','Authorization':'Bearer '+MAILERLITE_API_KEY},
+      body:JSON.stringify({email, groups:[MAILERLITE_GROUP_ID]})
+    });
+    if(res.ok){
+      alert('Thanks for subscribing!');
+      input.value = '';
+    } else {
+      alert('Something went wrong. Please try again.');
+    }
+  }catch(e){
+    alert('Something went wrong. Please try again.');
+    console.error(e);
+  }
+}
+
+/* ═══════════════════════════════════════════════════════════
+   BOTTOM SHEET — mobile annotation viewer
+   ═══════════════════════════════════════════════════════════ */
+function openBs(ann){
+  const content = document.getElementById('bsContent');
+  let h = '';
+  if(ann.label) h += `<div class="bs-ttl">${ann.label}</div>`;
+  if(ann.phonetic) h += `<div class="bs-ph">${ann.phonetic}</div>`;
+  if(ann.image) h += `<img class="bs-img" src="${ann.image}" alt="">`;
+  if(ann.body) h += `<div class="bs-txt">${ann.body}</div>`;
+  if(ann.link) h += `<a class="bs-lnk" href="${ann.link}" target="_blank">Link</a>`;
+  content.innerHTML = h;
+  document.getElementById('bsOverlay').classList.add('show');
+  document.body.style.overflow = 'hidden';
+}
+
+function closeBs(){
+  document.getElementById('bsOverlay').classList.remove('show');
+  document.body.style.overflow = '';
+}
+
+document.getElementById('bsOverlay').addEventListener('click', function(e){
+  if(e.target === this) closeBs();
+});
+document.getElementById('bsClose').addEventListener('click', closeBs);
 
 /* ═══════════════════════════════════════════════════════════
    NOTION BLOCK RENDERER
@@ -331,10 +487,19 @@ function wireUpAnnotations(annotations){
       }, HOVER_DELAY);
     }
 
-    span.addEventListener('mouseenter', show);
-    span.addEventListener('mouseleave', scheduleHide);
-    note.addEventListener('mouseenter', ()=>{ if(hideTimers[k]){ clearTimeout(hideTimers[k]); hideTimers[k]=null; }});
-    note.addEventListener('mouseleave', scheduleHide);
+    const isMobile = () => window.innerWidth <= 900;
+
+    span.addEventListener('mouseenter', () => { if(!isMobile()) show(); });
+    span.addEventListener('mouseleave', () => { if(!isMobile()) scheduleHide(); });
+    note.addEventListener('mouseenter', ()=>{ if(!isMobile() && hideTimers[k]){ clearTimeout(hideTimers[k]); hideTimers[k]=null; }});
+    note.addEventListener('mouseleave', () => { if(!isMobile()) scheduleHide(); });
+
+    // Mobile: tap to open bottom sheet
+    span.addEventListener('click', (e) => {
+      if(!isMobile()) return;
+      e.preventDefault();
+      openBs(ann);
+    });
   });
 }
 
