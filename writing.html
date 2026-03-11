@@ -4,7 +4,7 @@
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
 <title>Writing — Harry Gandhi</title>
-<link rel="icon" href="data:image/svg+xml,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 100 100'><text y='.9em' font-size='90'>🌻</text></svg>">
+<link rel="icon" type="image/png" href="favicon.png">
 <link href="https://fonts.googleapis.com/css2?family=Brygada+1918:ital,wght@0,400;0,500;0,600;0,700;1,400;1,500;1,600;1,700&display=swap" rel="stylesheet">
 <style>
 *{margin:0;padding:0;box-sizing:border-box;}
@@ -52,8 +52,8 @@ nav a:hover{opacity:.5;}
   width:50%;margin-right:50%;
   padding:100px 40px 100px 48px;
 }
-.masonry{column-count:2;column-gap:24px;}
-.masonry>*{break-inside:avoid;margin-bottom:24px;}
+.masonry{display:flex;gap:24px;}
+.masonry-col{flex:1;display:flex;flex-direction:column;gap:24px;}
 
 /* Text essay card */
 .card{
@@ -139,7 +139,8 @@ nav a:hover{opacity:.5;}
   .right-inner h1{font-size:28px;}
   .right-inner h2{font-size:26px;}
   .left-grid{width:100%;margin-right:0;padding:40px 20px 100px;order:1;}
-  .masonry{column-count:1;}
+  .masonry{flex-direction:column;gap:24px;}
+  .masonry-col{display:contents;}
 }
 </style>
 </head>
@@ -177,7 +178,7 @@ nav a:hover{opacity:.5;}
 
 <div class="right-text">
   <div class="right-inner">
-    <h1>I write about life in<br>the <span class="wc wc-yellow">in-between</span> spaces,</h1>
+    <h1>I write about moments in<br>the <span class="wc wc-yellow">in-between</span> spaces,</h1>
     <div class="betweens">
       Between the heavens and hell,<br>
       Between fear and freedom,<br>
@@ -188,7 +189,7 @@ nav a:hover{opacity:.5;}
       Between the leap and the landing,
     </div>
     <h2>For this is where <span class="wc wc-green">beauty</span> lies.</h2>
-    <p class="aside">(and also other ramblings about this and other realities)</p>
+    <p class="aside">(and also other ramblings about this, and other realities)</p>
   </div>
 </div>
 
@@ -292,6 +293,12 @@ async function fetchPosts(){
 
 function renderPosts(pages){
   masonry.innerHTML = '';
+  const colLeft = document.createElement('div');
+  colLeft.className = 'masonry-col';
+  const colRight = document.createElement('div');
+  colRight.className = 'masonry-col';
+  masonry.appendChild(colLeft);
+  masonry.appendChild(colRight);
 
   pages.forEach((page, i) => {
     const props = page.properties;
@@ -303,13 +310,15 @@ function renderPosts(pages){
     const cardColor = props['Card Color']?.select?.name || 'white';
     const imageFile = props['Card Image']?.files?.[0];
     const imageUrl = imageFile?.file?.url || imageFile?.external?.url || '';
+    const order = props.Order?.number || (i + 1);
 
     const rot = rotations[i % rotations.length];
+    const targetCol = (order % 2 === 1) ? colLeft : colRight;
+    let el;
 
     if(cardType === 'quote'){
-      // Quote / poem postcard — non-clickable
       const colorClass = colorMap[cardColor] || '';
-      const el = document.createElement('div');
+      el = document.createElement('div');
       el.className = 'card-quote' + (colorClass ? ' '+colorClass : '');
       const tapeStyles = [
         'left:20px;transform:rotate(-2deg)',
@@ -323,18 +332,14 @@ function renderPosts(pages){
         ${preview ? `<div class="quote-text">${preview}</div>` : ''}
         ${author ? `<div class="author">— ${author}</div>` : ''}
         <div class="tag">#fiction</div>`;
-      masonry.appendChild(el);
     } else if(cardType === 'art-only'){
-      // Art postcard — no link
       if(imageUrl){
-        const el = document.createElement('div');
+        el = document.createElement('div');
         el.className = 'art-card';
         el.innerHTML = `<img src="${imageUrl}" alt="${title}">`;
-        masonry.appendChild(el);
       }
     } else if(cardType === 'image' && imageUrl){
-      // Image essay card
-      const el = document.createElement('div');
+      el = document.createElement('div');
       el.className = 'card-img';
       el.onclick = () => location.href = `blog-post.html?slug=${slug}&id=${page.id}`;
       const tapeStylesImg = [
@@ -349,27 +354,26 @@ function renderPosts(pages){
           <h3>${title}</h3>
           ${preview ? `<div class="preview">${preview}</div>` : ''}
         </div>`;
-      masonry.appendChild(el);
     } else {
-      // Text essay card
       const colorClass = colorMap[cardColor] || '';
-      const el = document.createElement('div');
+      el = document.createElement('div');
       el.className = 'card' + (colorClass ? ' '+colorClass : '');
       el.onclick = () => location.href = `blog-post.html?slug=${slug}&id=${page.id}`;
-
-      // Tape position varies
       const tapeStyles = [
         'left:20px;transform:rotate(-2deg)',
         'right:20px;transform:rotate(2deg)',
         'left:50%;margin-left:-22px;transform:rotate(-1deg)'
       ];
-
       el.innerHTML = `
         <div class="tape" style="${tapeStyles[i%3]}"></div>
         <h3>${title}</h3>
         ${author ? `<div class="author">by ${author}</div>` : ''}
         ${preview ? `<div class="preview">${preview}</div>` : ''}`;
-      masonry.appendChild(el);
+    }
+
+    if(el){
+      el.style.order = order;
+      targetCol.appendChild(el);
     }
   });
 }
@@ -392,28 +396,40 @@ function renderDemoData(){
   ];
 
   masonry.innerHTML = '';
+  const colLeft = document.createElement('div');
+  colLeft.className = 'masonry-col';
+  const colRight = document.createElement('div');
+  colRight.className = 'masonry-col';
+  masonry.appendChild(colLeft);
+  masonry.appendChild(colRight);
+
   demo.forEach((item, i) => {
+    const order = i + 1;
     const rot = rotations[i % rotations.length];
     const tapeStyles = ['left:20px;transform:rotate(-2deg)','right:20px;transform:rotate(2deg)','left:50%;margin-left:-22px;transform:rotate(-1deg)'];
+    const targetCol = (order % 2 === 1) ? colLeft : colRight;
+    let el;
 
     if(item.type === 'art'){
-      const el = document.createElement('div');
+      el = document.createElement('div');
       el.className = 'art-card';
       el.innerHTML = `<img src="${item.image}" alt="Hilma af Klint">`;
-      masonry.appendChild(el);
     } else if(item.type === 'image'){
-      const el = document.createElement('div');
+      el = document.createElement('div');
       el.className = 'card-img';
       el.onclick = () => location.href = 'blog-post.html';
       el.innerHTML = `<div class="tape" style="${tapeStyles[i%3]}"></div><img src="${item.image}" alt="" style="height:200px;"><div class="overlay"><h3>${item.title}</h3><div class="preview">${item.preview}</div></div>`;
-      masonry.appendChild(el);
     } else {
       const colorClass = item.color && item.color !== 'white' ? item.color : '';
-      const el = document.createElement('div');
+      el = document.createElement('div');
       el.className = 'card' + (colorClass ? ' '+colorClass : '');
       el.onclick = () => location.href = 'blog-post.html';
       el.innerHTML = `<div class="tape" style="${tapeStyles[i%3]}"></div><h3>${item.title}</h3>${item.author?`<div class="author">by ${item.author}</div>`:''}${item.preview?`<div class="preview">${item.preview}</div>`:''}`;
-      masonry.appendChild(el);
+    }
+
+    if(el){
+      el.style.order = order;
+      targetCol.appendChild(el);
     }
   });
 }
