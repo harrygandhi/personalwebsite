@@ -1,0 +1,571 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>A Magic Trick — Harry Gandhi</title>
+<link rel="icon" type="image/png" href="favicon.png">
+<style>
+  @import url('https://fonts.googleapis.com/css2?family=Brygada+1918:ital,wght@0,400;0,500;0,600;0,700;1,400;1,500;1,600&display=swap');
+
+  * { margin: 0; padding: 0; box-sizing: border-box; }
+
+  :root {
+    --bg: #f4f1ec;
+    --text: #2c2a26;
+    --text-dim: #8a857b;
+    --accent-rose: #c4a08a;
+    --accent-olive: #7a8a5c;
+    --card-white: #faf8f4;
+    --card-shadow: rgba(44,42,38,0.12);
+  }
+
+  html, body {
+    width: 100%; height: 100%;
+    background: var(--bg);
+    color: var(--text);
+    font-family: 'Brygada 1918', Georgia, serif;
+    overflow: hidden;
+    cursor: default;
+    -webkit-font-smoothing: antialiased;
+  }
+
+  body::after {
+    content: '';
+    position: fixed;
+    inset: 0;
+    opacity: 0.025;
+    background-image: url("data:image/svg+xml,%3Csvg viewBox='0 0 256 256' xmlns='http://www.w3.org/2000/svg'%3E%3Cfilter id='n'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='0.8' numOctaves='4' stitchTiles='stitch'/%3E%3C/filter%3E%3Crect width='100%25' height='100%25' filter='url(%23n)'/%3E%3C/svg%3E");
+    pointer-events: none;
+    z-index: 9999;
+  }
+
+  #app {
+    position: relative;
+    width: 100%;
+    height: 100%;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    z-index: 1;
+  }
+
+  .scene {
+    display: none;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+    text-align: center;
+    width: 100%;
+    height: 100%;
+    padding: 2rem;
+    position: absolute;
+    inset: 0;
+  }
+
+  .scene.active { display: flex; }
+
+  .scene-text {
+    font-family: 'Brygada 1918', Georgia, serif;
+    font-weight: 400;
+    font-size: clamp(1.3rem, 3.2vw, 2.2rem);
+    line-height: 1.55;
+    max-width: 580px;
+    color: var(--text);
+    opacity: 0;
+    transform: translateY(10px);
+    animation: fadeUp 0.9s ease forwards;
+    letter-spacing: -0.01em;
+  }
+
+  .hint {
+    font-family: 'Brygada 1918', Georgia, serif;
+    font-size: 0.75rem;
+    font-weight: 400;
+    color: var(--text-dim);
+    margin-top: 2rem;
+    opacity: 0;
+    animation: fadeUp 0.9s ease 0.5s forwards;
+    letter-spacing: 0.04em;
+  }
+
+  @keyframes fadeUp { to { opacity: 1; transform: translateY(0); } }
+  @keyframes fadeIn { from { opacity: 0; } to { opacity: 1; } }
+  @keyframes fadeOut { from { opacity: 1; } to { opacity: 0; } }
+
+  .btn-row {
+    display: flex;
+    gap: 1.5rem;
+    margin-top: 2.5rem;
+    opacity: 0;
+    animation: fadeUp 0.8s ease 0.4s forwards;
+    flex-wrap: wrap;
+    justify-content: center;
+  }
+
+  .btn {
+    font-family: 'Brygada 1918', Georgia, serif;
+    font-size: 0.92rem;
+    font-weight: 400;
+    letter-spacing: 0.04em;
+    padding: 0.65rem 1.8rem;
+    border: 1px solid var(--text-dim);
+    background: transparent;
+    color: var(--text);
+    cursor: pointer;
+    transition: all 0.35s ease;
+    position: relative;
+    overflow: hidden;
+  }
+
+  .btn::before {
+    content: '';
+    position: absolute;
+    inset: 0;
+    background: var(--accent-rose);
+    opacity: 0;
+    transition: opacity 0.35s ease;
+    z-index: -1;
+  }
+
+  .btn:hover { border-color: var(--accent-rose); color: #fff; }
+  .btn:hover::before { opacity: 1; }
+
+  .btn-single {
+    margin-top: 2.5rem;
+    opacity: 0;
+    animation: fadeUp 0.8s ease 0.4s forwards;
+  }
+
+  #riffle-container {
+    position: relative;
+    width: 170px;
+    height: 250px;
+    perspective: 800px;
+  }
+
+  .riffle-card {
+    position: absolute;
+    width: 170px;
+    height: 250px;
+    border-radius: 8px;
+    background: var(--card-white);
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-family: 'Brygada 1918', Georgia, serif;
+    font-weight: 600;
+    box-shadow: 0 1px 8px var(--card-shadow), 0 4px 20px var(--card-shadow);
+    opacity: 0;
+    overflow: hidden;
+  }
+
+  .riffle-card .card-face {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+    width: 100%;
+    height: 100%;
+    padding: 12px;
+    position: relative;
+  }
+
+  .card-corner {
+    position: absolute;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    line-height: 1;
+  }
+
+  .card-corner.top-left { top: 8px; left: 10px; }
+  .card-corner.bottom-right { bottom: 8px; right: 10px; transform: rotate(180deg); }
+  .card-corner .rank { font-size: 1.2rem; font-weight: 600; }
+  .card-corner .suit-small { font-size: 0.95rem; margin-top: -2px; }
+  .card-center-suit { font-size: 4.2rem; line-height: 1; }
+
+  #image-grid {
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    gap: 1rem;
+    max-width: 380px;
+    width: 100%;
+    margin-top: 1.5rem;
+    position: relative;
+  }
+
+  .image-option {
+    aspect-ratio: 1;
+    border-radius: 6px;
+    cursor: pointer;
+    transition: all 0.3s ease;
+    border: 2px solid transparent;
+    overflow: hidden;
+    opacity: 0;
+    animation: fadeIn 0.4s ease forwards;
+  }
+
+  .image-option:nth-child(1) { animation-delay: 0.1s; }
+  .image-option:nth-child(2) { animation-delay: 0.2s; }
+  .image-option:nth-child(3) { animation-delay: 0.3s; }
+  .image-option:nth-child(4) { animation-delay: 0.4s; }
+
+  .image-option:hover { border-color: var(--accent-rose); transform: scale(1.02); }
+  .image-option canvas { width: 100%; height: 100%; display: block; }
+
+  #reveal-card {
+    width: 190px;
+    height: 275px;
+    border-radius: 10px;
+    background: var(--card-white);
+    box-shadow: 0 6px 30px rgba(44,42,38,0.15), 0 0 60px rgba(196,160,138,0.1);
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    margin-bottom: 2rem;
+    opacity: 0;
+    transform: scale(0.85) rotateY(180deg);
+    transition: all 1.2s cubic-bezier(0.23, 1, 0.32, 1);
+  }
+
+  #reveal-card.shown { opacity: 1; transform: scale(1) rotateY(0deg); }
+
+  #reveal-card .card-face {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+    width: 100%;
+    height: 100%;
+    padding: 14px;
+    position: relative;
+  }
+
+  .fake-btn-row {
+    display: flex;
+    gap: 1.2rem;
+    margin-top: 2rem;
+    opacity: 0;
+    animation: fadeUp 0.8s ease 1.8s forwards;
+    flex-wrap: wrap;
+    justify-content: center;
+    max-width: 500px;
+  }
+
+  .fake-btn {
+    font-family: 'Brygada 1918', Georgia, serif;
+    font-size: 0.9rem;
+    font-weight: 400;
+    letter-spacing: 0.02em;
+    padding: 0.6rem 1.6rem;
+    border: 1px solid var(--text-dim);
+    background: transparent;
+    color: var(--text);
+    cursor: pointer;
+    transition: all 0.35s ease;
+  }
+
+  .fake-btn:hover { border-color: var(--accent-rose); }
+
+  .countdown-bar {
+    position: absolute;
+    bottom: 0;
+    left: 0;
+    height: 2px;
+    background: var(--accent-olive);
+    opacity: 0.5;
+    transition: width linear;
+  }
+
+  .fade-out { animation: fadeOut 0.5s ease forwards; }
+
+  .round-label {
+    font-family: 'Brygada 1918', Georgia, serif;
+    font-size: 0.78rem;
+    font-weight: 400;
+    color: var(--text-dim);
+    letter-spacing: 0.1em;
+    text-transform: uppercase;
+    margin-bottom: 1.2rem;
+    opacity: 0;
+    animation: fadeUp 0.6s ease forwards;
+  }
+
+  @media (max-width: 500px) {
+    #riffle-container { width: 135px; height: 195px; }
+    .riffle-card { width: 135px; height: 195px; }
+    .card-center-suit { font-size: 3.2rem; }
+    .card-corner .rank { font-size: 1rem; }
+    .card-corner .suit-small { font-size: 0.8rem; }
+    #reveal-card { width: 155px; height: 225px; }
+    #image-grid { max-width: 290px; gap: 0.75rem; }
+    .fake-btn { font-size: 0.82rem; padding: 0.55rem 1.2rem; }
+  }
+</style>
+</head>
+<body>
+<div id="app"></div>
+
+<script>
+const SUITS = ['hearts','diamonds','clubs','spades'];
+const RANKS = ['A','2','3','4','5','6','7','8','9','10','J','Q','K'];
+const SYM = { hearts:'♥', diamonds:'♦', clubs:'♣', spades:'♠' };
+const CLR = { hearts:'#9e3030', diamonds:'#9e3030', clubs:'#2c2a26', spades:'#2c2a26' };
+const RED = ['hearts','diamonds'];
+
+function rnd(a) { return a[Math.floor(Math.random()*a.length)]; }
+
+function pickForce() {
+  return { rank: rnd(['2','3','4','5','6','7','8','9','10']), suit: rnd(SUITS) };
+}
+
+function doozy() {
+  const rank = rnd(RANKS), suit = rnd(SUITS);
+  return { rank, suit, color: RED.includes(suit) ? '#2c2a26' : '#9e3030', isDoozy: true };
+}
+
+function buildDeck(fc, forceCount) {
+  const d = [];
+  const total = 40;
+  const forceStart = Math.floor(total * 0.6);
+  for (let i = 0; i < total; i++) {
+    if (i >= forceStart && i < forceStart + forceCount) {
+      d.push({ rank: fc.rank, suit: fc.suit, color: CLR[fc.suit], isDoozy: false });
+    } else {
+      d.push(doozy());
+    }
+  }
+  return d;
+}
+
+function m32(a) {
+  return function() {
+    a |= 0; a = a + 0x6D2B79F5 | 0;
+    var t = Math.imul(a ^ a >>> 15, 1 | a);
+    t = t + Math.imul(t ^ t >>> 7, 61 | t) ^ t;
+    return ((t ^ t >>> 14) >>> 0) / 4294967296;
+  }
+}
+
+function genImg(cv, seed) {
+  const ctx = cv.getContext('2d');
+  const w = cv.width = 300, h = cv.height = 300;
+  const r = m32(seed);
+  const pals = [
+    ['#3d2b1f','#6b4226','#c8956c','#f0d9b5','#e8c39e'],
+    ['#2c3325','#4a5a3a','#7a8a5c','#b5c49a','#dde4cc'],
+    ['#3b2030','#6b3a4a','#c4a08a','#e8d0c0','#f5ece4'],
+    ['#2a2520','#5a4a3a','#8a7a6a','#c4b4a4','#e8ddd0'],
+    ['#1e2a28','#3a5a4a','#6a8a7a','#a4c4b4','#d4e4da'],
+    ['#302020','#6a3030','#9e5050','#c88080','#e8b8b0'],
+    ['#28241e','#5c5040','#8a7e6a','#b8aa94','#e0d4c0'],
+    ['#1a2030','#3a4a60','#6a7a90','#9aaaba','#cad4e0'],
+    ['#2e2418','#6e5430','#ae8450','#d4b480','#f0dcc0'],
+    ['#242a1e','#4a5a34','#7a8a54','#aaba84','#d4e0b4'],
+  ];
+  const p = pals[Math.floor(r()*pals.length)];
+  ctx.fillStyle = p[0]; ctx.fillRect(0,0,w,h);
+  const s = Math.floor(r()*7);
+  if(s===0){for(let i=0;i<10;i++){ctx.beginPath();ctx.moveTo(r()*w,r()*h);ctx.bezierCurveTo(r()*w,r()*h,r()*w,r()*h,r()*w,r()*h);ctx.lineWidth=r()*25+2;ctx.strokeStyle=p[Math.floor(r()*p.length)]+'88';ctx.stroke();}}
+  else if(s===1){const cx=w/2+(r()-.5)*80,cy=h/2+(r()-.5)*80;for(let i=14;i>0;i--){ctx.beginPath();ctx.arc(cx,cy,i*16+r()*10,0,Math.PI*2);ctx.fillStyle=p[i%p.length]+(i%2===0?'aa':'66');ctx.fill();}}
+  else if(s===2){for(let i=0;i<16;i++){ctx.save();ctx.translate(r()*w,r()*h);ctx.rotate(r()*Math.PI*2);ctx.fillStyle=p[Math.floor(r()*p.length)]+'99';const sz=r()*100+30;if(r()>.5)ctx.fillRect(-sz/2,-sz/2,sz,sz*(r()*.5+.3));else{ctx.beginPath();ctx.moveTo(0,-sz/2);ctx.lineTo(sz/2,sz/2);ctx.lineTo(-sz/2,sz/2);ctx.closePath();ctx.fill();}ctx.restore();}}
+  else if(s===3){for(let i=0;i<35;i++){const x=r()*w,y=r()*h,rd=r()*80+10;const g=ctx.createRadialGradient(x,y,0,x,y,rd);g.addColorStop(0,p[Math.floor(r()*p.length)]+'aa');g.addColorStop(1,'transparent');ctx.fillStyle=g;ctx.beginPath();ctx.arc(x,y,rd,0,Math.PI*2);ctx.fill();}}
+  else if(s===4){for(let i=0;i<22;i++){const x=r()*w/2,y=r()*h,rd=r()*60+10;ctx.fillStyle=p[Math.floor(r()*p.length)]+'bb';ctx.beginPath();ctx.ellipse(x,y,rd,rd*(r()*1.5+.5),r()*Math.PI,0,Math.PI*2);ctx.fill();ctx.beginPath();ctx.ellipse(w-x,y,rd,rd*(r()*1.5+.5),r()*Math.PI,0,Math.PI*2);ctx.fill();}}
+  else if(s===5){for(let y2=0;y2<h;y2+=2)for(let x2=0;x2<w;x2+=2){const v1=Math.sin(x2*.02+r()*10)*Math.cos(y2*.02+r()*10);const v2=Math.sin((x2+y2)*.015*(r()+.5));const ci=Math.floor(((v1+v2)/2+1)/2*(p.length-1));ctx.fillStyle=p[ci];ctx.fillRect(x2,y2,2,2);}}
+  else{for(let i=0;i<6;i++){ctx.beginPath();const cx=r()*w,cy=r()*h;const pts=8+Math.floor(r()*6);for(let q=0;q<=pts;q++){const a2=(q/pts)*Math.PI*2;const rd2=40+r()*80;const px=cx+Math.cos(a2)*rd2,py=cy+Math.sin(a2)*rd2;if(q===0)ctx.moveTo(px,py);else ctx.quadraticCurveTo(cx+Math.cos(a2-.3)*(rd2+r()*40),cy+Math.sin(a2-.3)*(rd2+r()*40),px,py);}ctx.closePath();ctx.fillStyle=p[Math.floor(r()*p.length)]+'aa';ctx.fill();}}
+  const id=ctx.getImageData(0,0,w,h);for(let i=0;i<id.data.length;i+=4){const n=(r()-.5)*15;id.data[i]+=n;id.data[i+1]+=n;id.data[i+2]+=n;}ctx.putImageData(id,0,0);
+}
+
+const forceCard = pickForce();
+const deck1 = buildDeck(forceCard, 3);
+const deck2 = buildDeck(forceCard, 2);
+let cur = 0, busy = false;
+let userSaidYes = false;
+const iSeed = Date.now();
+
+function init() {
+  const app = document.getElementById('app');
+
+  const S = [
+    () => clickS('Welcome to your personal magic show.', { hint: '(click to advance)' }),
+    () => {
+      const s = mk('div','scene active');
+      s.innerHTML = `<div class="scene-text">Can I show you a magic trick?</div>
+        <div class="btn-row"><button class="btn" id="by">Yes</button><button class="btn" id="bn">No</button></div>`;
+      af(() => { s.querySelector('#by').onclick = () => go(); s.querySelector('#bn').onclick = () => decl(s); });
+      return s;
+    },
+    () => clickS('I am going to attempt to do something that no computer has ever done before.'),
+    () => clickS('I am going to have a little fun with your subconscious mind, and show you how it is intertwined with the choices you make.'),
+    () => clickS('In a moment, I am going to riffle through a deck of cards. Your job will be to select one card.'),
+    () => clickS('Ready?'),
+    () => clickS('Okay, here goes.', { auto: 1800 }),
+    () => riffleS(deck1, false),
+    () => clickS("That was a bit fast, wasn't it?"),
+    () => clickS("Okay I'll riffle again…watch closely this time.", { auto: 2200 }),
+    () => riffleS(deck2, true),
+    () => clickS('Okay. Remember your card.'),
+    () => clickS('What fascinates me about the human mind is how its subconsciousness is so intertwined with the fabric of reality.'),
+    () => clickS('So I am going to access your subconscious mind to guess the card you chose.'),
+    () => clickS('I am going to show you a few images, and your goal is to select an image that speaks to you.'),
+    () => clickS('Make your choices quickly. We want to engage your subconscious mind, and not your conscious mind.'),
+    () => imgS(1),
+    () => imgS(2),
+    () => imgS(3),
+    () => imgS(4),
+    () => clickS('Okay fascinating — your choices are telling me a lot about you.'),
+    () => clickS('Not only do you have a beautiful mind, but it also tells me the type of card you would select.'),
+    () => clickS('Your chosen card is…', { auto: 2500 }),
+    () => revealS(),
+    () => responseS(),
+    () => finalS(),
+  ];
+
+  function render(i) { app.innerHTML = ''; app.appendChild(S[i]()); busy = false; }
+
+  window.go = function() {
+    if (busy) return; busy = true; cur++;
+    if (cur < S.length) {
+      const el = app.querySelector('.scene');
+      if (el) { el.classList.add('fade-out'); setTimeout(() => render(cur), 500); }
+      else render(cur);
+    }
+  };
+
+  render(0);
+}
+
+function mk(t, c) { const e = document.createElement(t); if (c) e.className = c; return e; }
+function af(fn) { setTimeout(fn, 50); }
+
+function clickS(text, o = {}) {
+  const s = mk('div','scene active');
+  let h = `<div class="scene-text">${text}</div>`;
+  if (o.hint) h += `<div class="hint">${o.hint}</div>`;
+  s.innerHTML = h;
+  if (o.auto) setTimeout(() => go(), o.auto);
+  else { s.style.cursor = 'pointer'; s.onclick = e => { if (e.target.tagName === 'BUTTON') return; go(); }; }
+  return s;
+}
+
+function decl(p) {
+  p.innerHTML = `<div class="scene-text" style="max-width:550px">Well, that's too bad. We were going to have some fun with your mind, and freewill. But alas, the choice is yours.</div>
+    <div class="btn-row" style="animation-delay:0.6s"><button class="btn" id="bt">Return to Trick</button><button class="btn" id="bh">Return to Homepage</button></div>`;
+  af(() => {
+    p.querySelector('#bt').onclick = () => location.reload();
+    p.querySelector('#bh').onclick = () => { window.location.href = '/'; };
+  });
+}
+
+function riffleS(theDeck, slower) {
+  const s = mk('div','scene active');
+  const c = mk('div'); c.id = 'riffle-container'; s.appendChild(c);
+  const base = slower ? 90 : 60;
+  const extra = slower ? 55 : 35;
+  let delay = 400;
+  theDeck.forEach(card => {
+    const el = mk('div','riffle-card');
+    const isF = !card.isDoozy;
+    const dur = isF ? base + extra : base;
+    el.innerHTML = `<div class="card-face" style="color:${card.color}">
+      <div class="card-corner top-left"><span class="rank">${card.rank}</span><span class="suit-small">${SYM[card.suit]}</span></div>
+      <div class="card-center-suit">${SYM[card.suit]}</div>
+      <div class="card-corner bottom-right"><span class="rank">${card.rank}</span><span class="suit-small">${SYM[card.suit]}</span></div>
+    </div>`;
+    if (card.isDoozy) el.style.transform = `rotate(${(Math.random()-.5)*5}deg)`;
+    el.style.opacity = '0';
+    setTimeout(() => { el.style.opacity = '1'; }, delay);
+    setTimeout(() => { el.style.opacity = '0'; }, delay + dur);
+    c.appendChild(el);
+    delay += dur + 8;
+  });
+  setTimeout(() => go(), delay + 500);
+  return s;
+}
+
+function imgS(round) {
+  const s = mk('div','scene active');
+  const lbl = mk('div','round-label');
+  lbl.textContent = `Round ${round} of 4`;
+  s.appendChild(lbl);
+  const grid = mk('div'); grid.id = 'image-grid'; s.appendChild(grid);
+  let done = false, autoT;
+  for (let i = 0; i < 4; i++) {
+    const w = mk('div','image-option');
+    const cv = document.createElement('canvas');
+    genImg(cv, iSeed + round * 1000 + i * 137);
+    w.appendChild(cv);
+    w.onclick = () => {
+      if (done) return; done = true;
+      clearTimeout(autoT);
+      w.style.borderColor = 'var(--accent-rose)';
+      w.style.boxShadow = '0 0 16px rgba(196,160,138,0.3)';
+      setTimeout(() => go(), 400);
+    };
+    grid.appendChild(w);
+  }
+  const bar = mk('div','countdown-bar');
+  bar.style.width = '100%'; grid.appendChild(bar);
+  requestAnimationFrame(() => { bar.style.transitionDuration = '2.5s'; bar.style.width = '0%'; });
+  autoT = setTimeout(() => { if (!done) { done = true; go(); } }, 2800);
+  return s;
+}
+
+function revealS() {
+  const s = mk('div','scene active');
+  const sym = SYM[forceCard.suit], clr = CLR[forceCard.suit];
+  const card = mk('div'); card.id = 'reveal-card';
+  card.innerHTML = `<div class="card-face" style="color:${clr}">
+    <div class="card-corner top-left"><span class="rank" style="font-size:1.4rem">${forceCard.rank}</span><span class="suit-small" style="font-size:1.1rem">${sym}</span></div>
+    <div class="card-center-suit" style="font-size:5rem">${sym}</div>
+    <div class="card-corner bottom-right"><span class="rank" style="font-size:1.4rem">${forceCard.rank}</span><span class="suit-small" style="font-size:1.1rem">${sym}</span></div>
+  </div>`;
+  s.appendChild(card);
+  setTimeout(() => card.classList.add('shown'), 300);
+  const txt = mk('div','scene-text');
+  txt.style.cssText = 'opacity:0;font-size:clamp(1.1rem,2.5vw,1.5rem)';
+  txt.textContent = 'Was this your card?';
+  s.appendChild(txt);
+  setTimeout(() => { txt.style.transition = 'opacity 0.8s ease'; txt.style.opacity = '1'; }, 1600);
+  const btns = mk('div','fake-btn-row');
+  btns.innerHTML = `<button class="fake-btn" data-choice="yes">Yes! How did you do it?</button><button class="fake-btn" data-choice="no">No, you got it wrong.</button>`;
+  s.appendChild(btns);
+  let fired = false;
+  af(() => {
+    const trigger = (choice) => {
+      if (fired) return; fired = true;
+      userSaidYes = (choice === 'yes');
+      txt.style.transition = 'opacity 0.6s ease'; txt.style.opacity = '0';
+      btns.style.transition = 'opacity 0.6s ease'; btns.style.opacity = '0';
+      setTimeout(() => go(), 1000);
+    };
+    btns.querySelectorAll('.fake-btn').forEach(b => {
+      const choice = b.dataset.choice;
+      b.addEventListener('click', () => trigger(choice));
+      b.addEventListener('touchstart', e => { e.preventDefault(); trigger(choice); });
+    });
+  });
+  return s;
+}
+
+function responseS() {
+  if (userSaidYes) {
+    return clickS('By reading your subconscious mind. It really is that simple.');
+  } else {
+    return clickS("Well, I guess I'm just like all the other muggle computers.");
+  }
+}
+
+function finalS() {
+  const s = mk('div','scene active');
+  s.innerHTML = `<div class="scene-text">Thanks for opening your mind to me.</div>
+    <div class="btn-single"><button class="btn" id="bh">Return to Homepage</button></div>`;
+  af(() => { s.querySelector('#bh').onclick = () => { window.location.href = '/'; }; });
+  return s;
+}
+
+document.addEventListener('DOMContentLoaded', init);
+</script>
+</body>
+</html>
