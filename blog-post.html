@@ -20,6 +20,31 @@ nav a:hover{opacity:.5;}
 .nav-sub button{font-family:inherit;font-size:12px;background:#1a1a1a;color:#fff;border:none;padding:7px 14px;cursor:pointer;white-space:nowrap;}
 .nav-sub button:hover{background:#333;}
 
+/* Loading animation */
+.loading-wrap{
+  position:fixed;top:0;left:0;right:0;bottom:0;
+  display:flex;flex-direction:column;align-items:center;justify-content:center;
+  z-index:50;background:#faf8f5;
+  transition:opacity 0.6s ease;
+}
+.loading-wrap.hide{opacity:0;pointer-events:none;}
+.sunflower-stack{
+  position:relative;width:160px;height:320px;margin-bottom:24px;
+}
+.sunflower-stack img{
+  position:absolute;top:0;left:0;width:100%;height:100%;object-fit:contain;
+}
+.sunflower-stack .sf-color{
+  clip-path:inset(100% 0 0 0);
+  animation:fillUp 2.8s ease-in-out infinite;
+}
+@keyframes fillUp{
+  0%{clip-path:inset(100% 0 0 0);}
+  60%,75%{clip-path:inset(0 0 0 0);}
+  90%,100%{clip-path:inset(100% 0 0 0);}
+}
+.loading-text{font-size:13px;color:#b0a99e;letter-spacing:0.04em;}
+
 .page{max-width:1060px;margin:0 auto;padding:48px 40px 100px;position:relative;}
 .content{max-width:540px;margin-left:auto;position:relative;}
 
@@ -170,29 +195,34 @@ hr{border:none;border-top:1px solid #e8e4df;margin:72px 0 0;}
   </div>
 </nav>
 
-<div class="page">
+<div class="loading-wrap" id="loadingWrap">
+  <div class="sunflower-stack">
+    <img src="justsunflower-bw.png" alt="">
+    <img class="sf-color" src="justsunflower-color.png" alt="">
+  </div>
+  <div class="loading-text">Loading...</div>
+</div>
+
+<div class="page" id="pageWrap" style="display:none;">
   <div class="content" id="col">
-    <div id="loading" style="text-align:center;padding:120px 20px;color:#bbb;font-size:14px;">Loading...</div>
-    <div id="article" style="display:none;">
-      <h1 id="postTitle"></h1>
-      <div class="meta" id="postMeta"></div>
-      <div class="body" id="postBody"></div>
-    </div>
+    <h1 id="postTitle"></h1>
+    <div class="meta" id="postMeta"></div>
+    <div class="body" id="postBody"></div>
   </div>
 </div>
 
-<hr>
+<hr id="pageHr" style="display:none;">
 
-<div class="footer-sub">
+<div class="footer-sub" id="footerSub" style="display:none;">
   <div class="footer-sub-row">
     <input type="email" id="footerSubEmail" placeholder="e-mail address">
     <button onclick="subscribe('footerSubEmail')">Subscribe</button>
   </div>
 </div>
 
-<div style="text-align:center;padding:20px 40px;font-size:12px;color:#b0a99e;">Made with ❤️ by Harry, Nazifa, Om and Claude</div>
+<div id="footerCredit" style="display:none;text-align:center;padding:20px 40px;font-size:12px;color:#b0a99e;">Made with ❤️ by Harry, Nazifa, Om and Claude</div>
 
-<div class="star">✦</div>
+<div id="footerStar" class="star" style="display:none;">✦</div>
 
 <!-- Bottom sheet for mobile annotations -->
 <div class="bs-overlay" id="bsOverlay">
@@ -496,9 +526,17 @@ async function loadPost(){
     }
   }
 
+  function showPage(){
+    document.getElementById('loadingWrap').classList.add('hide');
+    document.getElementById('pageWrap').style.display = '';
+    document.getElementById('pageHr').style.display = '';
+    document.getElementById('footerSub').style.display = '';
+    document.getElementById('footerCredit').style.display = '';
+    document.getElementById('footerStar').style.display = '';
+  }
+
   if(!pageId){
-    document.getElementById('loading').style.display = 'none';
-    document.getElementById('article').style.display = 'block';
+    showPage();
     loadDemoAnnotations();
     return;
   }
@@ -510,8 +548,7 @@ async function loadPost(){
 
     // If proxy returned an error (env vars not set), show demo
     if(page.error){
-      document.getElementById('loading').style.display = 'none';
-      document.getElementById('article').style.display = 'block';
+      showPage();
       loadDemoAnnotations();
       return;
     }
@@ -543,8 +580,7 @@ async function loadPost(){
     document.title = `${title} — Harry Gandhi`;
 
     // 5. Show article, hide loading
-    document.getElementById('loading').style.display = 'none';
-    document.getElementById('article').style.display = 'block';
+    showPage();
 
     // 6. Fetch and wire up annotations from inline database
     const annotations = await fetchAnnotations(allBlocks);
@@ -554,8 +590,7 @@ async function loadPost(){
 
   } catch(e){
     console.error('Failed to load from Notion:', e);
-    document.getElementById('loading').style.display = 'none';
-    document.getElementById('article').style.display = 'block';
+    showPage();
     loadDemoAnnotations();
   }
 }
