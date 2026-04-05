@@ -6,3 +6,8 @@
   from = "/api/notion/*"
   to = "/.netlify/functions/notion/:splat"
   status = 200
+
+[[redirects]]
+  from = "/writing/:slug"
+  to = "/blog-post.html"
+  status = 200

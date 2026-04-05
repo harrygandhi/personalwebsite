@@ -342,7 +342,7 @@ function renderPosts(pages){
     } else if(cardType === 'image' && imageUrl){
       el = document.createElement('div');
       el.className = 'card-img';
-      el.onclick = () => location.href = `blog-post.html?slug=${slug}&id=${page.id}`;
+      el.onclick = () => location.href = `/writing/${slug}`;
       const tapeStylesImg = [
         'left:20px;transform:rotate(-2deg)',
         'right:20px;transform:rotate(2deg)',
@@ -359,7 +359,7 @@ function renderPosts(pages){
       const colorClass = colorMap[cardColor] || '';
       el = document.createElement('div');
       el.className = 'card' + (colorClass ? ' '+colorClass : '');
-      el.onclick = () => location.href = `blog-post.html?slug=${slug}&id=${page.id}`;
+      el.onclick = () => location.href = `/writing/${slug}`;
       const tapeStyles = [
         'left:20px;transform:rotate(-2deg)',
         'right:20px;transform:rotate(2deg)',
@@ -418,13 +418,13 @@ function renderDemoData(){
     } else if(item.type === 'image'){
       el = document.createElement('div');
       el.className = 'card-img';
-      el.onclick = () => location.href = 'blog-post.html';
+      el.onclick = () => location.href = '/writing';
       el.innerHTML = `<div class="tape" style="${tapeStyles[i%3]}"></div><img src="${item.image}" alt="" style="height:200px;"><div class="overlay"><h3>${item.title}</h3><div class="preview">${item.preview}</div></div>`;
     } else {
       const colorClass = item.color && item.color !== 'white' ? item.color : '';
       el = document.createElement('div');
       el.className = 'card' + (colorClass ? ' '+colorClass : '');
-      el.onclick = () => location.href = 'blog-post.html';
+      el.onclick = () => location.href = '/writing';
       el.innerHTML = `<div class="tape" style="${tapeStyles[i%3]}"></div><h3>${item.title}</h3>${item.author?`<div class="author">by ${item.author}</div>`:''}${item.preview?`<div class="preview">${item.preview}</div>`:''}`;
     }
 

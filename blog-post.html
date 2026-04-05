@@ -172,42 +172,11 @@ hr{border:none;border-top:1px solid #e8e4df;margin:72px 0 0;}
 
 <div class="page">
   <div class="content" id="col">
-
-    <h1>Article or Intro Title Goes Here</h1>
-    <div class="meta">written by Harry Gandhi <span class="bar">|</span> Aug 28 , 2025</div>
-
-    <div class="body">
-      <h2>Lorem ipsum dolor sit amet consectetur.</h2>
-
-      <p>Eu fermentum dui velit diam morbi aliquam sem. Vitae ut pulvinar sapien gravida nibh est tristique habitasse. Id mattis netus lacus velit turpis tellus. –Neque nam <span class="a" data-n="fn1">consectetur consectetur sed porta felis. Sit ut amet odio</span> fermentum imperdiet.</p>
-
-      <p>Semper donec vel massa ac cras nisl. Sagittis scelerisque risus faucibus integer purus blandit etiam luctus. Vitae neque at in non luctus <strong>iaculis</strong> ac. Nisl praesent dictum mauris faucibus sed commodo pretium mattis. Accumsan <span class="a" data-n="def1">pellentesque orci amet porta</span> at purus dui. Proin libero nec auctor vivamus elit. Sed in tincidunt consectetur id diam vitae amet.</p>
-
-      <h2>Lorem ipsum dolor</h2>
-
-      <p>Est sagittis integer nulla risus pharetra sit vel. Diam aenean est amet scelerisque cum non. At dictumst in id consequat tellus in. Morbi ut fusce ultrices egestas <em>mauris sollicitudin. Sed id urna at mauris nunc bibendum</em> ac. Fringilla diam facilisi consectetur sed nullam eget in. Et pellentesque iaculis sodales enim in at. Mauris egestas non egestas aliquet sit dui vel elit est. Turpis consequat tempus <strong><span class="a" data-n="def2">ullamcorper elementum</span></strong> in enim ipsum auctor ornare. Mi molestie massa facilisis scelerisque proin amet cursus ut. Aliquam feugiat netus neque eu id elit odio pellentesque duis. Phasellus ipsum at tortor scelerisque nullam pharetra sed.</p>
-
-      <p>Nulla proin diam ligula dictum cras ultrices leo pulvinar. Vitae orci aliquet odio donec a id. Id in est orci tempus quis consequat at. Vel tortor aliquam sed turpis diam proin. Mattis lobortis mauris faucibus id dolor justo phasellus.</p>
-
-      <p>Pulvinar mi enim sed ipsum aliquam pellentesque odio eget. Sed sit eros et eget sed. Amet sed sit placerat venenatis. Aenean adipiscing arcu condimentum magna eu habitasse. Elementum consequat semper pulvinar ac. Amet tortor cras in ultrices. Nullam velit bibendit <em>duis</em> eu. <strong>Sagittis tincidunt</strong> consectetur vitae ultrices dictum sed in. Convallis semper ultrices vulputate mi consequat tempus aliquet amet.</p>
-
-      <p>Lorem ipsum dolor sit amet consectetur. Eu fermentum dui velit diam morbi aliquam sem. Vitae ut pulvinar sapien gravida nibh est tristique habitasse. Id mattis netus lacus velit turpis tellus. Neque nam consectetur consectetur sed porta felis. Sit ut amet odio fermentum imperdiet.</p>
-
-      <p>Semper donec vel massa ac cras nisl. Sagittis scelerisque risus faucibus integer purus blandit etiam luctus. Vitae neque at in non luctus iaculis ac. Nisl praesent dictum mauris faucibus sed commodo pretium mattis. Accumsan <span class="a" data-n="def3">pellentesque orci amet porta</span> at purus dui. Proin libero nec auctor vivamus elit. Sed in tincidunt consectetur id diam vitae amet.</p>
-
-      <p>Est sagittis integer nulla risus pharetra sit vel. Diam aenean est amet scelerisque cum non. At dictumst in id consequat tellus in. Morbi ut fusce ultrices egestas mauris sollicitudin. Sed id urna at mauris nunc bibendum ac. Fringilla diam facilisi consectetur sed nullam eget in. Et pellentesque iaculis sodales enim in at. <span class="a" data-n="def4">Mauris egestas non</span> egestas aliquet sit dui vel elit est. Turpis consequat tempus ullamcorper elementum in enim ipsum auctor ornare. Mi molestie massa facilisis scelerisque proin amet cursus ut. Aliquam feugiat netus neque eu id elit odio pellentesque duis. Phasellus ipsum at tortor scelerisque nullam pharetra sed.</p>
-
-      <p>Nulla proin diam ligula dictum cras ultrices leo pulvinar. Vitae orci aliquet odio donec a id. Id in est orci tempus quis consequat at. Vel tortor aliqua...</p>
-
-      <div class="refs">
-        <h3>References &amp; Inspiration</h3>
-        <ol>
-          <li>"Mind, Matter and the Implicate Order" by David Bohm (1980).</li>
-          <li>"Panpsychism" by Thomas Nagel in his collection "Mortal Questions" (1979).</li>
-          <li>Galen Strawson's "Consciousness and Its Place in Nature" (2006).</li>
-          <li>"Facing Up to the Problem of Consciousness" by David Chalmers (1995).</li>
-        </ol>
-      </div>
+    <div id="loading" style="text-align:center;padding:120px 20px;color:#bbb;font-size:14px;">Loading...</div>
+    <div id="article" style="display:none;">
+      <h1 id="postTitle"></h1>
+      <div class="meta" id="postMeta"></div>
+      <div class="body" id="postBody"></div>
     </div>
   </div>
 </div>
@@ -504,9 +473,35 @@ function wireUpAnnotations(annotations){
    MAIN — FETCH PAGE + ANNOTATIONS FROM NOTION
    ═══════════════════════════════════════════════════════════ */
 async function loadPost(){
+  // Try to get slug from clean URL path (/writing/slug) or query param fallback
+  const pathParts = window.location.pathname.split('/writing/');
+  const slug = pathParts.length > 1 ? decodeURIComponent(pathParts[1].replace(/\/$/,'')) : null;
   const params = new URLSearchParams(window.location.search);
-  const pageId = params.get('id');
-  if(!pageId){ loadDemoAnnotations(); return; }
+  let pageId = params.get('id');
+
+  // If we have a slug but no pageId, query the database to find the page
+  if(slug && !pageId){
+    try{
+      const dbRes = await fetch('/api/notion/database', { method: 'POST' });
+      const dbData = await dbRes.json();
+      if(dbData.results){
+        const match = dbData.results.find(p => {
+          const s = p.properties?.Slug?.rich_text?.[0]?.plain_text || '';
+          return s === slug;
+        });
+        if(match) pageId = match.id;
+      }
+    } catch(e){
+      console.error('Failed to look up slug:', e);
+    }
+  }
+
+  if(!pageId){
+    document.getElementById('loading').style.display = 'none';
+    document.getElementById('article').style.display = 'block';
+    loadDemoAnnotations();
+    return;
+  }
 
   try{
     // 1. Fetch page metadata
@@ -514,7 +509,12 @@ async function loadPost(){
     const page = await pageRes.json();
 
     // If proxy returned an error (env vars not set), show demo
-    if(page.error){ loadDemoAnnotations(); return; }
+    if(page.error){
+      document.getElementById('loading').style.display = 'none';
+      document.getElementById('article').style.display = 'block';
+      loadDemoAnnotations();
+      return;
+    }
 
     // 2. Fetch all blocks (may need pagination for long essays)
     let allBlocks = [];
@@ -537,12 +537,16 @@ async function loadPost(){
     const formattedDate = date ? new Date(date).toLocaleDateString('en-US',{year:'numeric',month:'short',day:'numeric'}) : '';
 
     // 4. Render content (excluding the annotation database)
-    document.querySelector('h1').textContent = title;
-    document.querySelector('.meta').innerHTML = `written by ${author}${formattedDate ? ` <span class="bar">|</span> ${formattedDate}` : ''}`;
-    document.querySelector('.body').innerHTML = blocksToHTML(allBlocks);
+    document.getElementById('postTitle').textContent = title;
+    document.getElementById('postMeta').innerHTML = `written by ${author}${formattedDate ? ` <span class="bar">|</span> ${formattedDate}` : ''}`;
+    document.getElementById('postBody').innerHTML = blocksToHTML(allBlocks);
     document.title = `${title} — Harry Gandhi`;
 
-    // 5. Fetch and wire up annotations from inline database
+    // 5. Show article, hide loading
+    document.getElementById('loading').style.display = 'none';
+    document.getElementById('article').style.display = 'block';
+
+    // 6. Fetch and wire up annotations from inline database
     const annotations = await fetchAnnotations(allBlocks);
     if(annotations.length > 0){
       wireUpAnnotations(annotations);
@@ -550,6 +554,8 @@ async function loadPost(){
 
   } catch(e){
     console.error('Failed to load from Notion:', e);
+    document.getElementById('loading').style.display = 'none';
+    document.getElementById('article').style.display = 'block';
     loadDemoAnnotations();
   }
 }
@@ -558,6 +564,17 @@ async function loadPost(){
    DEMO ANNOTATIONS — for static fallback content
    ═══════════════════════════════════════════════════════════ */
 function loadDemoAnnotations(){
+  // Show demo content in the article container
+  document.getElementById('postTitle').textContent = 'Article or Intro Title Goes Here';
+  document.getElementById('postMeta').innerHTML = 'written by Harry Gandhi <span class="bar">|</span> Aug 28, 2025';
+  document.getElementById('postBody').innerHTML = `
+    <h2>Lorem ipsum dolor sit amet consectetur.</h2>
+    <p>Eu fermentum dui velit diam morbi aliquam sem. Vitae ut pulvinar sapien gravida nibh est tristique habitasse. Id mattis netus lacus velit turpis tellus. &ndash;Neque nam <span class="a" data-trigger="consectetur consectetur sed porta felis. sit ut amet odio">consectetur consectetur sed porta felis. Sit ut amet odio</span> fermentum imperdiet.</p>
+    <p>Semper donec vel massa ac cras nisl. Sagittis scelerisque risus faucibus integer purus blandit etiam luctus. Vitae neque at in non luctus <strong>iaculis</strong> ac. Nisl praesent dictum mauris faucibus sed commodo pretium mattis. Accumsan <span class="a" data-trigger="pellentesque orci amet porta">pellentesque orci amet porta</span> at purus dui. Proin libero nec auctor vivamus elit.</p>
+    <h2>Lorem ipsum dolor</h2>
+    <p>Est sagittis integer nulla risus pharetra sit vel. Diam aenean est amet scelerisque cum non. At dictumst in id consequat tellus in. Morbi ut fusce ultrices egestas mauris sollicitudin. Turpis consequat tempus <strong><span class="a" data-trigger="ullamcorper elementum">ullamcorper elementum</span></strong> in enim ipsum auctor ornare.</p>
+    <p>Est sagittis integer nulla risus pharetra sit vel. <span class="a" data-trigger="mauris egestas non">Mauris egestas non</span> egestas aliquet sit dui vel elit est. Turpis consequat tempus ullamcorper elementum in enim ipsum auctor ornare.</p>
+  `;
   const demoAnnotations = [
     {trigger:'consectetur consectetur sed porta felis. sit ut amet odio', label:'Fig. 1', body:'Semper donec vel massa ac cras nisl. Sagittis scelerisque risus faucibus integer purus blandit etiam luctus.', phonetic:'Image & Description', image:'hero-color.png.png', link:'#'},
     {trigger:'pellentesque orci amet porta', label:'Definition', body:'Semper donec vel massa ac cras nisl. Sagittis scelerisque risus faucibus integer purus blandit etiam luctus.', phonetic:'/ˌdefəˈniSHən/', image:'', link:'#'},
