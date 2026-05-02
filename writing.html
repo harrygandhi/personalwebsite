@@ -134,9 +134,8 @@ nav a:hover{opacity:.5;}
   animation:fillUp 2.8s ease-in-out infinite;
 }
 @keyframes fillUp{
-  0%{clip-path:inset(100% 0 0 0);}
-  60%,75%{clip-path:inset(0 0 0 0);}
-  90%,100%{clip-path:inset(100% 0 0 0);}
+  0%, 8% { clip-path: inset(100% 0 0 0); }    /* hold grey at the start */
+  85%, 100% { clip-path: inset(0 0 0 0); }    /* fill up, hold full color, then snap to grey at loop */
 }
 .loading-text{font-size:18px;color:#b0a99e;letter-spacing:0.04em;}
 

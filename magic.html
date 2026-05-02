@@ -435,7 +435,9 @@
     .card-center-suit { font-size: 3.2rem; }
     .card-corner .rank { font-size: 1rem; }
     .card-corner .suit-small { font-size: 0.8rem; }
+    .pip { font-size: 1.5rem; }
     #reveal-card { width: 155px; height: 225px; }
+    #reveal-card .pip { font-size: 1.8rem; }
     #image-grid { max-width: 290px; gap: 0.75rem; }
     .fake-btn { font-size: 0.82rem; padding: 0.55rem 1.2rem; }
   }
@@ -488,12 +490,14 @@ function doozy() {
   return { rank, suit, color: RED.includes(suit) ? '#2c2a26' : '#9e3030', isDoozy: true };
 }
 
-function buildDeck(fc, forceCount) {
+// pattern: array of booleans starting at the 60% mark — true = force, false = doozy
+function buildDeck(fc, pattern) {
   const d = [];
   const total = 40;
   const forceStart = Math.floor(total * 0.6);
   for (let i = 0; i < total; i++) {
-    if (i >= forceStart && i < forceStart + forceCount) {
+    const idx = i - forceStart;
+    if (idx >= 0 && idx < pattern.length && pattern[idx]) {
       d.push({ rank: fc.rank, suit: fc.suit, color: CLR[fc.suit], isDoozy: false });
     } else {
       d.push(doozy());
@@ -588,8 +592,10 @@ function genImg(cv, seed) {
 }
 
 const forceCard = pickForce();
-const deck1 = buildDeck(forceCard, 3);
-const deck2 = buildDeck(forceCard, 2);
+// First riffle: 3 consecutive force cards (fast pass to plant the seed)
+const deck1 = buildDeck(forceCard, [true, true, true]);
+// Second riffle: force, doozy, force — gap between sightings registers as two distinct impressions
+const deck2 = buildDeck(forceCard, [true, false, true]);
 let cur = 0, busy = false;
 let userSaidYes = false;
 const iSeed = Date.now();
