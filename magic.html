@@ -28,7 +28,113 @@
     overflow: hidden;
     cursor: default;
     -webkit-font-smoothing: antialiased;
+    transition: background 0.9s ease, color 0.9s ease;
   }
+
+  /* Dark mode — engaged when user enters the reveal branch */
+  body.reveal-mode {
+    --bg: #0a0a0a;
+    --text: #f4f1ec;
+    --text-dim: #8a857b;
+    --card-white: #1a1a1a;
+  }
+  body.reveal-mode::after { opacity: 0.04; }
+  body.reveal-mode .btn { border-color: #3a3a3a; color: #f4f1ec; }
+  body.reveal-mode .btn:hover { border-color: var(--accent-rose); color: #fff; }
+  body.reveal-mode .fake-btn { border-color: #3a3a3a; color: #f4f1ec; }
+  body.reveal-mode .fake-btn:hover { border-color: var(--accent-rose); }
+
+  /* Inline link inside scene text */
+  .scene-link {
+    color: var(--accent-rose);
+    text-decoration: none;
+    border-bottom: 1px solid var(--accent-rose);
+    cursor: pointer;
+    transition: opacity 0.3s ease;
+  }
+  .scene-link:hover { opacity: 0.7; }
+
+  /* Video clip — full viewport */
+  .scene.video-scene {
+    padding: 0;
+    justify-content: center;
+  }
+  .video-wrap {
+    position: relative;
+    width: 100vw;
+    height: 100vh;
+    background: #000;
+  }
+  .video-wrap video {
+    width: 100%; height: 100%;
+    display: block;
+    object-fit: contain;
+    background: #000;
+  }
+  .video-gate {
+    position: absolute; inset: 0;
+    display: flex; flex-direction: column;
+    align-items: center; justify-content: center;
+    background: #000;
+    cursor: pointer;
+    z-index: 5;
+  }
+  .video-gate.hide { display: none; }
+  .video-gate-text {
+    color: #f4f1ec;
+    font-family: 'Brygada 1918', Georgia, serif;
+    font-size: clamp(1rem, 2.5vw, 1.4rem);
+    letter-spacing: 0.02em;
+    margin-bottom: 1.2rem;
+    opacity: 0.8;
+  }
+  .video-gate-icon {
+    width: 64px; height: 64px;
+    border-radius: 50%;
+    border: 1.5px solid rgba(244,241,236,0.6);
+    display: flex; align-items: center; justify-content: center;
+    transition: all 0.3s ease;
+  }
+  .video-gate:hover .video-gate-icon {
+    border-color: var(--accent-rose);
+    transform: scale(1.05);
+  }
+  .video-gate-icon::before {
+    content: '';
+    width: 0; height: 0;
+    border-left: 16px solid rgba(244,241,236,0.85);
+    border-top: 11px solid transparent;
+    border-bottom: 11px solid transparent;
+    margin-left: 4px;
+  }
+
+  /* Reveal paragraph */
+  .reveal-para {
+    max-width: 620px;
+    font-family: 'Brygada 1918', Georgia, serif;
+    font-size: clamp(1rem, 2vw, 1.15rem);
+    line-height: 1.75;
+    text-align: left;
+    color: var(--text);
+    opacity: 0;
+    transform: translateY(12px);
+    animation: fadeUp 1.1s ease forwards;
+  }
+  .reveal-para p { margin-bottom: 1.1rem; }
+  .reveal-para .hook {
+    font-size: clamp(1.4rem, 3vw, 1.9rem);
+    font-weight: 500;
+    margin-bottom: 1.6rem;
+    color: var(--text);
+    letter-spacing: -0.01em;
+  }
+  .reveal-para a {
+    color: var(--accent-rose);
+    text-decoration: none;
+    border-bottom: 1px solid rgba(196,160,138,0.5);
+    transition: border-color 0.3s ease;
+  }
+  .reveal-para a:hover { border-bottom-color: var(--accent-rose); }
 
   body::after {
     content: '';
@@ -64,6 +170,15 @@
   }
 
   .scene.active { display: flex; }
+
+  /* Scrollable scene variant — used for long content like the reveal paragraph */
+  .scene.scroll-scene {
+    justify-content: flex-start;
+    padding-top: clamp(3rem, 8vh, 5rem);
+    padding-bottom: clamp(2rem, 6vh, 4rem);
+    overflow-y: auto;
+    -webkit-overflow-scrolling: touch;
+  }
 
   .scene-text {
     font-family: 'Brygada 1918', Georgia, serif;
@@ -275,14 +390,29 @@
 
   .fake-btn:hover { border-color: var(--accent-rose); }
 
+  .countdown-bar-wrap {
+    width: 100%;
+    max-width: 380px;
+    height: 4px;
+    margin-top: 14px;
+    background: rgba(122, 138, 92, 0.15);
+    border-radius: 2px;
+    overflow: hidden;
+  }
   .countdown-bar {
-    position: absolute;
-    bottom: 0;
-    left: 0;
-    height: 2px;
+    height: 100%;
+    width: 100%;
     background: var(--accent-olive);
-    opacity: 0.5;
-    transition: width linear;
+    opacity: 0.85;
+    border-radius: 2px;
+    transform-origin: left center;
+  }
+  .countdown-bar.run {
+    animation: countdown 2.5s linear forwards;
+  }
+  @keyframes countdown {
+    from { transform: scaleX(1); }
+    to { transform: scaleX(0); }
   }
 
   .fade-out { animation: fadeOut 0.5s ease forwards; }
@@ -468,37 +598,42 @@ function init() {
   const app = document.getElementById('app');
 
   const S = [
-    () => clickS('Welcome to your personal magic show.', { hint: '(click to advance)' }),
+    () => clickS('Welcome. I\'ve been waiting for you.', { hint: '(click to advance)' }),
     () => {
       const s = mk('div','scene active');
-      s.innerHTML = `<div class="scene-text">Can I show you a magic trick?</div>
+      s.innerHTML = `<div class="scene-text">You ready for a magic trick?</div>
         <div class="btn-row"><button class="btn" id="by">Yes</button><button class="btn" id="bn">No</button></div>`;
       af(() => { s.querySelector('#by').onclick = () => go(); s.querySelector('#bn').onclick = () => decl(s); });
       return s;
     },
-    () => clickS('I am going to attempt to do something that no computer has ever done before.'),
-    () => clickS('I am going to have a little fun with your subconscious mind, and show you how it is intertwined with the choices you make.'),
-    () => clickS('In a moment, I am going to riffle through a deck of cards. Your job will be to select one card.'),
+    () => clickS('I\'m going to attempt something no computer has ever done before.'),
+    () => clickS('We\'re going to have a little fun with your subconscious — and reveal how it shapes the choices you make.'),
+    () => clickS('In a moment, I\'ll riffle through a deck of cards. Your job: pick one.'),
     () => clickS('Ready?'),
-    () => clickS('Okay, here goes.', { auto: 1800 }),
+    () => clickS('Here goes.', { auto: 1800 }),
     () => riffleS(deck1, false),
-    () => clickS("That was a bit fast, wasn't it?"),
-    () => clickS("Okay I'll riffle again…watch closely this time.", { auto: 2200 }),
+    () => clickS("...that was a bit fast, wasn't it?"),
+    () => clickS('Let me try again. Watch closely.', { auto: 2200 }),
     () => riffleS(deck2, true),
-    () => clickS('Okay. Remember your card.'),
-    () => clickS('What fascinates me about the human mind is how its subconsciousness is so intertwined with the fabric of reality.'),
-    () => clickS('So I am going to access your subconscious mind to guess the card you chose.'),
-    () => clickS('I am going to show you a few images, and your goal is to select an image that speaks to you.'),
-    () => clickS('Make your choices quickly. We want to engage your subconscious mind, and not your conscious mind.'),
+    () => clickS('Got one?'),
+    () => clickS('Remember your card.'),
+    () => clickS('What fascinates me about the mind is how deeply its subconscious is woven into the fabric of reality.'),
+    () => clickS('So I\'m going to read it — and guess the card you chose.'),
+    () => clickS('I\'ll show you a few images. Pick the one that speaks to you.'),
+    () => clickS('Choose quickly — we want your subconscious, not your conscious mind, doing the work.'),
     () => imgS(1),
     () => imgS(2),
     () => imgS(3),
     () => imgS(4),
-    () => clickS('Okay fascinating — your choices are telling me a lot about you.'),
-    () => clickS('Not only do you have a beautiful mind, but it also tells me the type of card you would select.'),
-    () => clickS('Your chosen card is…', { auto: 2500 }),
+    () => clickS('Fascinating. Your choices tell me a lot about you.'),
+    () => clickS('You have a beautiful mind — and it tells me the kind of card you\'d choose.'),
+    () => clickS('I have it.', { auto: 2500 }),
     () => revealS(),
     () => responseS(),
+    // Reveal branch (only entered if user said "yes" and clicked "here")
+    () => sureS(),
+    () => videoS(),
+    () => revealParaS(),
     () => finalS(),
   ];
 
@@ -511,6 +646,27 @@ function init() {
       if (el) { el.classList.add('fade-out'); setTimeout(() => render(cur), 500); }
       else render(cur);
     }
+  };
+
+  // Advance one scene with no fade — used for cinematic cuts (e.g. video end)
+  window.goSharp = function() {
+    if (busy) return; busy = true; cur++;
+    if (cur < S.length) render(cur);
+  };
+
+  // Advance n scenes forward (used to skip branches)
+  window.goN = function(n) {
+    if (busy) return; busy = true; cur += n;
+    if (cur < S.length) {
+      const el = app.querySelector('.scene');
+      if (el) { el.classList.add('fade-out'); setTimeout(() => render(cur), 500); }
+      else render(cur);
+    }
+  };
+
+  // Toggle dark/reveal mode on body
+  window.enterRevealMode = function() {
+    document.body.classList.add('reveal-mode');
   };
 
   render(0);
@@ -530,7 +686,7 @@ function clickS(text, o = {}) {
 }
 
 function decl(p) {
-  p.innerHTML = `<div class="scene-text" style="max-width:550px">Well, that's too bad. We were going to have some fun with your mind, and freewill. But alas, the choice is yours.</div>
+  p.innerHTML = `<div class="scene-text" style="max-width:550px">A pity. We were going to have some fun with your mind — and your free will. But the choice, of course, is yours.</div>
     <div class="btn-row" style="animation-delay:0.6s"><button class="btn" id="bt">Return to Trick</button><button class="btn" id="bh">Return to Homepage</button></div>`;
   af(() => {
     p.querySelector('#bt').onclick = () => location.reload();
@@ -585,9 +741,11 @@ function imgS(round) {
     };
     grid.appendChild(w);
   }
+  const barWrap = mk('div','countdown-bar-wrap');
   const bar = mk('div','countdown-bar');
-  bar.style.width = '100%'; grid.appendChild(bar);
-  requestAnimationFrame(() => { bar.style.transitionDuration = '2.5s'; bar.style.width = '0%'; });
+  barWrap.appendChild(bar);
+  s.appendChild(barWrap);
+  requestAnimationFrame(() => bar.classList.add('run'));
   autoT = setTimeout(() => { if (!done) { done = true; go(); } }, 2800);
   return s;
 }
@@ -609,7 +767,7 @@ function revealS() {
   s.appendChild(txt);
   setTimeout(() => { txt.style.transition = 'opacity 0.8s ease'; txt.style.opacity = '1'; }, 1600);
   const btns = mk('div','fake-btn-row');
-  btns.innerHTML = `<button class="fake-btn" data-choice="yes">Yes! How did you do it?</button><button class="fake-btn" data-choice="no">No, you got it wrong.</button>`;
+  btns.innerHTML = `<button class="fake-btn" data-choice="yes">Yes — how did you do that?</button><button class="fake-btn" data-choice="no">No — you missed it.</button>`;
   s.appendChild(btns);
   let fired = false;
   af(() => {
@@ -631,15 +789,111 @@ function revealS() {
 
 function responseS() {
   if (userSaidYes) {
-    return clickS('By reading your subconscious mind. It really is that simple.');
+    // Yes path — magician quote with "here" link to enter reveal branch
+    const s = mk('div','scene active');
+    s.innerHTML = `<div class="scene-text">A magician never reveals their secrets — but if you really want to know, <span class="scene-link" id="hereLink">here's</span> how it works.</div>
+      <div class="hint">(or click anywhere else to keep the magic alive)</div>`;
+    af(() => {
+      const link = s.querySelector('#hereLink');
+      link.addEventListener('click', e => {
+        e.stopPropagation();
+        window.enterRevealMode();
+        go(); // advance to sureS
+      });
+      // Click anywhere else skips the reveal branch — jump to finalS (skip 3 scenes)
+      s.style.cursor = 'pointer';
+      s.addEventListener('click', e => {
+        if (e.target.id === 'hereLink') return;
+        if (e.target.tagName === 'BUTTON') return;
+        goN(4);
+      });
+    });
+    return s;
   } else {
-    return clickS("Well, I guess I'm just like all the other muggle computers.");
+    // No path — muggle line, then jump to finalS (skip 3 reveal scenes)
+    const s = mk('div','scene active');
+    s.innerHTML = `<div class="scene-text">Then I'm just another muggle computer after all.</div>`;
+    s.style.cursor = 'pointer';
+    s.onclick = e => { if (e.target.tagName === 'BUTTON') return; goN(4); };
+    return s;
   }
+}
+
+function sureS() {
+  const s = mk('div','scene active');
+  s.innerHTML = `<div class="scene-text">Are you sure? Once you see the reveal, you can't unsee it.</div>
+    <div class="btn-row"><button class="btn" id="bRed">Yes, give me this forbidden knowledge.</button><button class="btn" id="bBlue">Nope, I'll stay in blissful ignorance.</button></div>`;
+  af(() => {
+    s.querySelector('#bRed').onclick = () => go(); // advance to videoS
+    s.querySelector('#bBlue').onclick = () => goN(3); // skip videoS + revealParaS, jump to finalS
+  });
+  return s;
+}
+
+function videoS() {
+  const s = mk('div','scene active video-scene');
+  const wrap = mk('div','video-wrap');
+  wrap.innerHTML = `
+    <video id="magicVideo" preload="auto" playsinline>
+      <source src="magic-clip.mp4" type="video/mp4">
+    </video>
+    <div class="video-gate" id="videoGate">
+      <div class="video-gate-text">Watch closely.</div>
+      <div class="video-gate-icon"></div>
+    </div>`;
+  s.appendChild(wrap);
+  af(() => {
+    const video = wrap.querySelector('#magicVideo');
+    const gate = wrap.querySelector('#videoGate');
+    let advanced = false;
+    // Hold on the last frame for 2s, then trigger the normal scene fade to reveal paragraph
+    const advance = () => {
+      if (advanced) return; advanced = true;
+      setTimeout(() => go(), 2000);
+    };
+
+    gate.addEventListener('click', () => {
+      gate.classList.add('hide');
+      const p = video.play();
+      if (p && p.catch) p.catch(() => { /* autoplay fallback */ });
+    });
+
+    // Pause at 39.5s, hold on the last frame, then fade out
+    video.addEventListener('timeupdate', () => {
+      if (video.currentTime >= 39.5) {
+        video.pause();
+        advance();
+      }
+    });
+    video.addEventListener('ended', advance);
+  });
+  return s;
+}
+
+function revealParaS() {
+  const s = mk('div','scene active scroll-scene');
+  const para = mk('div','reveal-para');
+  para.innerHTML = `
+    <p class="hook">One in three? Not one in ten?</p>
+    <p>This is because of something magicians call <em>the force</em> — the same tactic used to give you the illusion of choice in my magic trick. Your card was decided before you ever began — placed in the deck three times, each appearance held on screen a fraction longer than the others. Just long enough for your eye to catch it, and your mind to claim it as a choice.</p>
+    <p>The images, the rounds, the talk of subconscious patterns? Theater. Or, in magic, we call it misdirection.</p>
+    <p>The interesting question isn't <em>how</em> the trick works. It's how often it works elsewhere — in the partner you "chose," the career you "fell into," the next thing you're about to do.</p>
+    <p>Free will is real. But it's rarer and quieter than we think.</p>
+    <p style="margin-top:1.8rem;font-size:0.95em;color:var(--text-dim);">If this resonated, watch Wesley Wang's full film <a href="https://www.youtube.com/watch?v=hif5eI5pBxo" target="_blank" rel="noopener">here</a>.</p>`;
+  s.appendChild(para);
+  const btnWrap = mk('div','btn-single');
+  btnWrap.style.marginTop = '2rem';
+  btnWrap.innerHTML = `<button class="btn" id="bHome">Return to Homepage</button>`;
+  s.appendChild(btnWrap);
+  af(() => {
+    s.querySelector('#bHome').onclick = () => { window.location.href = '/'; };
+  });
+  return s;
 }
 
 function finalS() {
   const s = mk('div','scene active');
-  s.innerHTML = `<div class="scene-text">Thanks for opening your mind to me.</div>
+  s.innerHTML = `<div class="scene-text">Thanks for letting me in.</div>
     <div class="btn-single"><button class="btn" id="bh">Return to Homepage</button></div>`;
   af(() => { s.querySelector('#bh').onclick = () => { window.location.href = '/'; }; });
   return s;
