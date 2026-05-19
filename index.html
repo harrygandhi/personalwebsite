@@ -23,18 +23,30 @@ nav a:hover{opacity:.5;}
 /* Hero layout */
 .page-hero{display:flex;min-height:100vh;}
 
-/* Left side — hero image with blossom animation */
+/* Left side — hero image with blossom animation, framed as a postcard */
 .left-hero{
   width:50%;position:fixed;top:0;left:0;bottom:0;
   background:#ece8e2;
   overflow:hidden;
+  display:flex;align-items:center;justify-content:center;
+  padding:48px 40px;
+}
+.left-hero .postcard-frame{
+  position:relative;
+  background:#fff;
+  padding:14px;
+  box-shadow:0 4px 20px rgba(0,0,0,0.08), 0 2px 6px rgba(0,0,0,0.05);
+  height:100%;
+  max-height:calc(100vh - 96px);
+  aspect-ratio: 730 / 1057;
+  max-width:100%;
 }
 .left-hero .img-stack{
   position:relative;width:100%;height:100%;
+  overflow:hidden;
 }
 .left-hero .img-stack img{
-  position:absolute;top:0;left:0;width:100%;height:100%;object-fit:contain;
-  padding:24px 24px 48px;
+  position:absolute;top:0;left:0;width:100%;height:100%;object-fit:cover;
 }
 .left-hero .img-bw{z-index:1;}
 .left-hero .img-color{z-index:2;opacity:0;animation:blossom 12s ease-in-out infinite;}
@@ -101,9 +113,11 @@ nav a:hover{opacity:.5;}
 
 <div class="page-hero">
   <div class="left-hero">
-    <div class="img-stack">
-      <img class="img-bw" src="hero-bw.png.png" alt="Botanical illustrations — ink drawing">
-      <img class="img-color" src="hero-color.png.png" alt="Botanical illustrations — watercolor">
+    <div class="postcard-frame">
+      <div class="img-stack">
+        <img class="img-bw" src="hero-bw.png.png" alt="Botanical illustrations — ink drawing">
+        <img class="img-color" src="hero-color.png.png" alt="Botanical illustrations — watercolor">
+      </div>
     </div>
   </div>
 
