@@ -703,7 +703,7 @@ function decl(p) {
 function riffleS(theDeck, slower) {
   const s = mk('div','scene active');
   const c = mk('div'); c.id = 'riffle-container'; s.appendChild(c);
-  const base = slower ? 95 : 75;
+  const base = slower ? 105 : 80;
   const extra = slower ? 55 : 35;
   let delay = 400;
   theDeck.forEach(card => {
