@@ -23,24 +23,63 @@ nav a:hover{opacity:.5;}
 /* Hero layout */
 .page-hero{display:flex;min-height:100vh;}
 
-/* Left side — hero image with blossom animation, framed as a postcard */
+/* Left side — hero image, framed as a scrapbook postcard */
 .left-hero{
   width:50%;position:fixed;top:0;left:0;bottom:0;
   background:#ece8e2;
   overflow:hidden;
   display:flex;align-items:center;justify-content:center;
-  padding:48px 40px;
+  padding:56px 48px;
 }
 .left-hero .postcard-frame{
   position:relative;
   background:#fff;
-  padding:14px;
-  box-shadow:0 4px 20px rgba(0,0,0,0.08), 0 2px 6px rgba(0,0,0,0.05);
+  padding:8px;                          /* smaller border */
+  box-shadow:0 6px 22px rgba(0,0,0,0.10), 0 2px 6px rgba(0,0,0,0.06);
   height:100%;
-  max-height:calc(100vh - 96px);
+  max-height:calc(100vh - 112px);
   aspect-ratio: 730 / 1057;
   max-width:100%;
 }
+
+/* Scotch tape — translucent cream with dashed cut edges */
+.left-hero .tape{
+  position:absolute;
+  background:linear-gradient(170deg,
+    rgba(240, 228, 195, 0.55) 0%,
+    rgba(220, 208, 175, 0.45) 50%,
+    rgba(240, 228, 195, 0.55) 100%);
+  border-left:1px dashed rgba(150, 135, 105, 0.18);
+  border-right:1px dashed rgba(150, 135, 105, 0.18);
+  box-shadow:0 1px 2px rgba(0,0,0,0.06);
+  z-index:3;
+  pointer-events:none;
+}
+/* Top-left tape */
+.left-hero .tape.tape-tl{
+  top:-11px; left:16px;
+  width:78px; height:22px;
+  transform: rotate(-11deg);
+}
+/* Top-right tape */
+.left-hero .tape.tape-tr{
+  top:-11px; right:16px;
+  width:78px; height:22px;
+  transform: rotate(8deg);
+}
+/* Bottom-left tape — larger, across the corner */
+.left-hero .tape.tape-bl{
+  bottom:-18px; left:-34px;
+  width:140px; height:28px;
+  transform: rotate(45deg);
+}
+/* Bottom-right small accent tape */
+.left-hero .tape.tape-br{
+  bottom:-9px; right:24px;
+  width:64px; height:20px;
+  transform: rotate(-6deg);
+}
+
 .left-hero .img-stack{
   position:relative;width:100%;height:100%;
   overflow:hidden;
@@ -118,6 +157,10 @@ nav a:hover{opacity:.5;}
         <img class="img-bw" src="hero-bw.png.png" alt="Botanical illustrations — ink drawing">
         <img class="img-color" src="hero-color.png.png" alt="Botanical illustrations — watercolor">
       </div>
+      <div class="tape tape-tl"></div>
+      <div class="tape tape-tr"></div>
+      <div class="tape tape-bl"></div>
+      <div class="tape tape-br"></div>
     </div>
   </div>
 
