@@ -15,31 +15,6 @@ nav.hidden{transform:translateY(-100%);opacity:0;}
 nav a{color:#1a1a1a;text-decoration:none;font-size:14px;letter-spacing:.3px;transition:opacity .3s;}
 nav a:hover{opacity:.5;}
 
-/* Sparkle around Magic link */
-.nav-magic{position:relative;display:inline-block;}
-.nav-magic .sp{
-  position:absolute;
-  color:#c4a08a;
-  opacity:0;
-  pointer-events:none;
-  line-height:1;
-  font-family:'Brygada 1918',serif;
-  transition:opacity .3s ease;
-  will-change:transform,opacity;
-}
-.nav-magic:hover .sp{
-  opacity:1;
-  animation:twinkle 1.6s ease-in-out infinite;
-}
-.nav-magic .sp1{top:-8px;left:-10px;font-size:11px;animation-delay:0s;}
-.nav-magic .sp2{top:-12px;right:-6px;font-size:9px;animation-delay:.35s;}
-.nav-magic .sp3{bottom:-8px;left:14%;font-size:8px;animation-delay:.7s;}
-.nav-magic .sp4{bottom:-10px;right:8%;font-size:10px;animation-delay:1.0s;}
-.nav-magic .sp5{top:50%;left:-16px;font-size:7px;animation-delay:1.2s;}
-@keyframes twinkle{
-  0%,100%{opacity:0;transform:scale(.4) rotate(0deg);}
-  50%{opacity:1;transform:scale(1.15) rotate(180deg);}
-}
 .nav-sub{display:flex;align-items:center;gap:0;margin-left:8px;}
 .nav-sub input{font-family:inherit;font-size:12px;border:1px solid #ccc;padding:7px 10px;width:160px;outline:none;background:#fff;border-radius:0;}
 .nav-sub input::placeholder{color:#c4c0ba;}
@@ -208,11 +183,6 @@ nav a:hover{opacity:.5;}
     min-height:auto;
     letter-spacing:.4px;
   }
-  nav.menu-open .nav-magic .sp1{top:-2px;left:-18px;font-size:16px;}
-  nav.menu-open .nav-magic .sp2{top:-8px;right:-14px;font-size:13px;}
-  nav.menu-open .nav-magic .sp3{bottom:-4px;left:8%;font-size:12px;}
-  nav.menu-open .nav-magic .sp4{bottom:-6px;right:6%;font-size:14px;}
-  nav.menu-open .nav-magic .sp5{top:50%;left:-24px;font-size:11px;}
   .right-text{width:100%;position:relative;padding:80px 28px 40px;min-height:auto;order:-1;}
   .right-inner h1{font-size:28px;}
   .right-inner h2{font-size:26px;}
@@ -242,7 +212,6 @@ nav a:hover{opacity:.5;}
   <button class="hamburger" id="hamburger" aria-label="Menu"><span></span><span></span><span></span></button>
   <a href="index.html">Home</a>
   <a href="writing.html">Writing</a>
-  <a href="magic.html" class="nav-magic">Magic<span class="sp sp1">✦</span><span class="sp sp2">✧</span><span class="sp sp3">✦</span><span class="sp sp4">✧</span><span class="sp sp5">✦</span></a>
   <div class="nav-sub">
     <input type="email" id="subEmail" placeholder="e-mail address">
     <button onclick="subscribe()">Subscribe</button>
