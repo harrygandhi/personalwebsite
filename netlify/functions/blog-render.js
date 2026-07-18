@@ -111,12 +111,23 @@ exports.handler = async (event) => {
       if (essay) {
         const meta = extractMeta(essay);
         const fullTitle = meta.title;
+        // Strip any existing OG / Twitter / description meta tags from the
+        // template so we don't end up with duplicates (parsers may pick the
+        // wrong one). Also drop the fallback HTML comment.
+        html = html.replace(
+          /<!--[^]*?blog-render[^]*?-->\s*/g,
+          ''
+        );
+        html = html.replace(
+          /\s*<meta[^>]+(?:property=["'](?:og:[^"']+)["']|name=["'](?:twitter:[^"']+|description)["'])[^>]*>/g,
+          ''
+        );
         // Replace the placeholder <title>
         html = html.replace(
           /<title>[^<]*<\/title>/,
           `<title>${escapeHtml(fullTitle)}</title>`
         );
-        // Inject OG / Twitter meta tags right after <title>
+        // Inject fresh OG / Twitter meta tags right after <title>
         html = html.replace(
           /<\/title>/,
           `</title>\n${buildMetaBlock({ ...meta, slug })}`
