@@ -58,7 +58,7 @@ function extractMeta(essay) {
 }
 
 function buildMetaBlock({ title, preview, author, imageUrl, slug }) {
-  const fullTitle = `${title} — Harry Gandhi`;
+  const fullTitle = title;
   const description = preview || `An essay by ${author} on harrygandhi.com`;
   const url = `${SITE_URL}/writing/${encodeURIComponent(slug)}`;
   const parts = [
@@ -110,7 +110,7 @@ exports.handler = async (event) => {
       const essay = await fetchEssayBySlug(slug);
       if (essay) {
         const meta = extractMeta(essay);
-        const fullTitle = `${meta.title} — Harry Gandhi`;
+        const fullTitle = meta.title;
         // Replace the placeholder <title>
         html = html.replace(
           /<title>[^<]*<\/title>/,
