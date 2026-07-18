@@ -12,8 +12,20 @@ html,body{width:100%;overflow-x:hidden;font-family:'Brygada 1918',serif;backgrou
 
 nav{position:fixed;top:0;right:0;z-index:100;display:flex;align-items:center;gap:28px;padding:22px 48px;transition:transform .4s,opacity .4s;}
 nav.hidden{transform:translateY(-100%);opacity:0;}
-nav a{color:#1a1a1a;text-decoration:none;font-size:14px;letter-spacing:.3px;transition:opacity .3s;}
-nav a:hover{opacity:.5;}
+nav a{color:#1a1a1a;text-decoration:none;font-size:14px;letter-spacing:.3px;position:relative;}
+nav a::before{
+  content:'';
+  position:absolute;
+  left:-2px;right:-2px;
+  bottom:-4px;
+  height:2px;
+  background:#1a1a1a;
+  filter:url(#roughline);
+  clip-path:inset(0 100% 0 0);
+  transition:clip-path 0.3s ease-out;
+  pointer-events:none;
+}
+nav a:hover::before{clip-path:inset(0 0 0 0);}
 
 .nav-sub{display:flex;align-items:center;gap:0;margin-left:8px;}
 .nav-sub input{font-family:inherit;font-size:12px;border:1px solid #ccc;padding:7px 10px;width:160px;outline:none;background:#fff;border-radius:0;}
@@ -204,6 +216,11 @@ nav a:hover{opacity:.5;}
       <feComposite in="displaced" in2="bwTexture" operator="in" result="textured"/>
       <feGaussianBlur in="textured" stdDeviation="0.8" result="softened"/>
       <feComposite in="softened" in2="SourceGraphic" operator="over"/>
+    </filter>
+    <!-- Rough hand-drawn underline — used for nav hover -->
+    <filter id="roughline" x="-5%" y="-50%" width="110%" height="200%">
+      <feTurbulence type="fractalNoise" baseFrequency="0.09 0.24" numOctaves="3" seed="5"/>
+      <feDisplacementMap in="SourceGraphic" scale="4" xChannelSelector="R" yChannelSelector="G"/>
     </filter>
   </defs>
 </svg>
