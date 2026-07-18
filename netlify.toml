@@ -9,5 +9,5 @@
 
 [[redirects]]
   from = "/writing/:slug"
-  to = "/blog-post.html"
+  to = "/.netlify/functions/blog-render/:slug"
   status = 200
