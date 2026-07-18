@@ -8,18 +8,17 @@
 <link href="https://fonts.googleapis.com/css2?family=Brygada+1918:ital,wght@0,400;0,500;0,600;0,700;1,400;1,500;1,600;1,700&display=swap" rel="stylesheet">
 <style>
 *{margin:0;padding:0;box-sizing:border-box;}
-html,body{width:100%;overflow-x:hidden;font-family:'Brygada 1918',serif;background:#faf8f5;color:#1a1a1a;}
+html,body{width:100%;overflow-x:hidden;font-family:'Brygada 1918',serif;background:#EAE9E7;color:#1a1a1a;}
 
 nav{position:fixed;top:0;right:0;z-index:100;display:flex;align-items:center;gap:28px;padding:22px 48px;transition:transform .4s,opacity .4s;}
 nav.hidden{transform:translateY(-100%);opacity:0;}
 nav a{color:#1a1a1a;text-decoration:none;font-size:14px;letter-spacing:.3px;transition:opacity .3s;}
 nav a:hover{opacity:.5;}
 
-/* Sparkle around Magic link */
-.nav-magic{position:relative;display:inline-block;}
-.nav-magic .sp{
+/* Tie-dye sparkle around inline links (e.g. the "here" in the PS line) */
+.tie-dye-sparkle{position:relative;display:inline-block;}
+.tie-dye-sparkle .sp{
   position:absolute;
-  color:#c4a08a;
   opacity:0;
   pointer-events:none;
   line-height:1;
@@ -27,18 +26,33 @@ nav a:hover{opacity:.5;}
   transition:opacity .3s ease;
   will-change:transform,opacity;
 }
-.nav-magic:hover .sp{
+.tie-dye-sparkle:hover .sp{
   opacity:1;
   animation:twinkle 1.6s ease-in-out infinite;
 }
-.nav-magic .sp1{top:-8px;left:-10px;font-size:11px;animation-delay:0s;}
-.nav-magic .sp2{top:-12px;right:-6px;font-size:9px;animation-delay:.35s;}
-.nav-magic .sp3{bottom:-8px;left:14%;font-size:8px;animation-delay:.7s;}
-.nav-magic .sp4{bottom:-10px;right:8%;font-size:10px;animation-delay:1.0s;}
-.nav-magic .sp5{top:50%;left:-16px;font-size:7px;animation-delay:1.2s;}
+.tie-dye-sparkle .sp1{top:-9px;left:-9px;font-size:11px;animation-delay:0s;color:#ff6b9d;}
+.tie-dye-sparkle .sp2{top:-12px;right:-6px;font-size:9px;animation-delay:.3s;color:#a855f7;}
+.tie-dye-sparkle .sp3{bottom:-8px;left:22%;font-size:8px;animation-delay:.6s;color:#3b82f6;}
+.tie-dye-sparkle .sp4{bottom:-10px;right:10%;font-size:10px;animation-delay:.9s;color:#14b8a6;}
+.tie-dye-sparkle .sp5{top:40%;left:-14px;font-size:7px;animation-delay:1.2s;color:#eab308;}
+.tie-dye-sparkle .sp6{top:60%;right:-14px;font-size:8px;animation-delay:1.45s;color:#f97316;}
+
+/* The link itself cycles through tie-dye hues on hover */
+.tie-dye-sparkle:hover{
+  animation:tiedye-hue 3s linear infinite;
+  border-bottom-color:transparent !important;
+}
 @keyframes twinkle{
   0%,100%{opacity:0;transform:scale(.4) rotate(0deg);}
   50%{opacity:1;transform:scale(1.15) rotate(180deg);}
+}
+@keyframes tiedye-hue{
+  0%   {color:#ff6b9d;}
+  20%  {color:#a855f7;}
+  40%  {color:#3b82f6;}
+  60%  {color:#14b8a6;}
+  80%  {color:#eab308;}
+  100% {color:#ff6b9d;}
 }
 .nav-sub{display:flex;align-items:center;gap:0;margin-left:8px;}
 .nav-sub input{font-family:inherit;font-size:12px;border:1px solid #ccc;padding:7px 10px;width:160px;outline:none;background:#fff;border-radius:0;}
@@ -52,19 +66,16 @@ nav a:hover{opacity:.5;}
 /* Left side — hero image, framed as a scrapbook postcard */
 .left-hero{
   width:50%;position:fixed;top:0;left:0;bottom:0;
-  background:#faf8f5;
+  background:#EAE9E7;
   overflow:hidden;
   display:flex;align-items:center;justify-content:center;
   padding:56px 48px;
 }
 .left-hero .postcard-frame{
   position:relative;
-  background:#fff;
-  padding:8px;                          /* smaller border */
-  box-shadow:0 6px 22px rgba(0,0,0,0.10), 0 2px 6px rgba(0,0,0,0.06);
   height:100%;
   max-height:calc(100vh - 112px);
-  aspect-ratio: 768 / 1404;
+  aspect-ratio: 922 / 1152;
   max-width:100%;
 }
 
@@ -81,30 +92,10 @@ nav a:hover{opacity:.5;}
   z-index:3;
   pointer-events:none;
 }
-/* Top-left tape */
-.left-hero .tape.tape-tl{
-  top:-11px; left:16px;
-  width:78px; height:22px;
-  transform: rotate(-11deg);
-}
-/* Top-right tape */
-.left-hero .tape.tape-tr{
-  top:-11px; right:16px;
-  width:78px; height:22px;
-  transform: rotate(8deg);
-}
-/* Bottom-left tape — larger, across the corner */
-.left-hero .tape.tape-bl{
-  bottom:-18px; left:-34px;
-  width:140px; height:28px;
-  transform: rotate(45deg);
-}
-/* Bottom-right small accent tape */
-.left-hero .tape.tape-br{
-  bottom:-9px; right:24px;
-  width:64px; height:20px;
-  transform: rotate(-6deg);
-}
+.left-hero .tape.tape-tl{top:-5px; left:16px; width:78px; height:22px; transform: rotate(-11deg);}
+.left-hero .tape.tape-tr{top:-5px; right:16px; width:78px; height:22px; transform: rotate(8deg);}
+.left-hero .tape.tape-bl{bottom:-18px; left:-34px; width:140px; height:28px; transform: rotate(45deg);}
+.left-hero .tape.tape-br{bottom:-9px; right:24px; width:64px; height:20px; transform: rotate(-6deg);}
 
 .left-hero .img-stack{
   position:relative;width:100%;height:100%;
@@ -113,8 +104,9 @@ nav a:hover{opacity:.5;}
 .left-hero .img-stack img{
   position:absolute;top:0;left:0;width:100%;height:100%;object-fit:cover;
 }
-.left-hero .img-bw{z-index:1;}
-.left-hero .img-color{z-index:2;opacity:0;animation:blossom 12s ease-in-out infinite;}
+/* Alternate between hero1 (color) and hero3 (B&W) on a 12s cycle */
+.left-hero .img-hero-1{z-index:1;}
+.left-hero .img-hero-2{z-index:2;opacity:0;animation:blossom 12s ease-in-out infinite;}
 .left-hero .placeholder{
   width:100%;height:100%;display:flex;align-items:center;justify-content:center;
   color:#b0a99e;font-size:14px;font-style:italic;
@@ -122,7 +114,7 @@ nav a:hover{opacity:.5;}
 
 @keyframes blossom{
   0%,7.5%    {opacity:0;}
-  17.5%,80%  {opacity:1;}   /* 17.5% -> 80% = color held for 62.5% of cycle */
+  17.5%,80%  {opacity:1;}   /* B&W held for 62.5% of cycle, color for the rest */
   90%,100%   {opacity:0;}
 }
 
@@ -159,7 +151,7 @@ nav a:hover{opacity:.5;}
   nav.menu-open{
     top:0;left:0;right:0;bottom:0;
     height:100vh;
-    background:#faf8f5;
+    background:#EAE9E7;
     display:flex;
     flex-direction:column;
     align-items:center;
@@ -182,11 +174,6 @@ nav a:hover{opacity:.5;}
     letter-spacing:.4px;
   }
   /* Larger sparkles for the bigger mobile Magic link */
-  nav.menu-open .nav-magic .sp1{top:-2px;left:-18px;font-size:16px;}
-  nav.menu-open .nav-magic .sp2{top:-8px;right:-14px;font-size:13px;}
-  nav.menu-open .nav-magic .sp3{bottom:-4px;left:8%;font-size:12px;}
-  nav.menu-open .nav-magic .sp4{bottom:-6px;right:6%;font-size:14px;}
-  nav.menu-open .nav-magic .sp5{top:50%;left:-24px;font-size:11px;}
 
   .page-hero{flex-direction:column;}
   .left-hero{display:none;}
@@ -202,7 +189,6 @@ nav a:hover{opacity:.5;}
   <button class="hamburger" id="hamburger" aria-label="Menu"><span></span><span></span><span></span></button>
   <a href="index.html">Home</a>
   <a href="writing.html">Writing</a>
-  <a href="magic.html" class="nav-magic">Magic<span class="sp sp1">✦</span><span class="sp sp2">✧</span><span class="sp sp3">✦</span><span class="sp sp4">✧</span><span class="sp sp5">✦</span></a>
   <div class="nav-sub">
     <input type="email" id="subEmail" placeholder="e-mail address">
     <button onclick="subscribe()">Subscribe</button>
@@ -213,8 +199,8 @@ nav a:hover{opacity:.5;}
   <div class="left-hero">
     <div class="postcard-frame">
       <div class="img-stack">
-        <img class="img-bw" src="sunflower-bw.jpg.png" alt="Sunflower botanical illustration — ink drawing">
-        <img class="img-color" src="sunflower-color.jpg.png" alt="Sunflower botanical illustration — watercolor">
+        <img class="img-hero-1" src="hero3.png" alt="Botanical illustration — B&W">
+        <img class="img-hero-2" src="hero4.png" alt="Botanical illustration — color">
       </div>
       <div class="tape tape-tl"></div>
       <div class="tape tape-tr"></div>
@@ -229,7 +215,7 @@ nav a:hover{opacity:.5;}
       <p>I am working on embodied cognition via <a href="https://lumenresearch.co" target="_blank">Lumen Labs</a>. In my free time, you can find me on a pickleball court, in nature, <a href="writing.html">writing</a>, or whipping up a storm in the kitchen.</p>
       <p>I also help independent researchers and deeptech/sci-fi founders, primarily via <a href="https://1517fund.com" target="_blank">1517 Fund</a>.</p>
       <p>If you are working in mathematics, cognitive science, or intelligence research, <a href="mailto:harry.m.gandhi@gmail.com">reach out</a>.</p>
-      <p style="margin-top:60px;">PS: Want to see a <a href="magic.html">magic trick</a>?</p>
+      <p style="margin-top:60px;">PS: click <a href="magic.html" class="tie-dye-sparkle">here<span class="sp sp1">✦</span><span class="sp sp2">✧</span><span class="sp sp3">✦</span><span class="sp sp4">✧</span><span class="sp sp5">✦</span><span class="sp sp6">✧</span></a> to see a magic trick.</p>
     </div>
     <p class="credit">Made with ❤️ by Harry, Nazifa, Om and Claude</p>
   </div>
