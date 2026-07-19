@@ -304,24 +304,36 @@ function toggleMenu(){
 }
 document.getElementById('hamburger').addEventListener('click', toggleMenu);
 
-/* Show hero loader only if the images take > 100ms to load — avoids a flash on cached visits */
+/* Hero loader: skip entirely if cached; otherwise hold for 1.5s minimum so it doesn't flash */
 (function(){
   const loader = document.getElementById('heroLoader');
   if(!loader) return;
   const imgs = document.querySelectorAll('.left-hero .img-stack img');
   if(imgs.length === 0) return;
+
+  // If every image is already loaded (cached case) — never show the loader
+  const allCached = Array.from(imgs).every(img => img.complete && img.naturalWidth > 0);
+  if(allCached) return;
+
+  // Otherwise show it now and hold for a minimum of 1.5s (or until images load, whichever is longer)
+  const start = Date.now();
+  const MIN_SHOW_MS = 1500;
+  loader.classList.add('show');
+
   let remaining = imgs.length;
-  let allLoaded = false;
-  const done = () => { if(--remaining <= 0){ allLoaded = true; loader.classList.remove('show'); } };
+  const oneDone = () => {
+    if(--remaining <= 0){
+      const wait = Math.max(0, MIN_SHOW_MS - (Date.now() - start));
+      setTimeout(() => loader.classList.remove('show'), wait);
+    }
+  };
   imgs.forEach(img => {
-    if(img.complete && img.naturalWidth > 0) done();
+    if(img.complete && img.naturalWidth > 0) oneDone();
     else {
-      img.addEventListener('load', done, {once:true});
-      img.addEventListener('error', done, {once:true});
+      img.addEventListener('load', oneDone, {once:true});
+      img.addEventListener('error', oneDone, {once:true});
     }
   });
-  // Only reveal the loader if images haven't finished within 100ms
-  setTimeout(() => { if(!allLoaded) loader.classList.add('show'); }, 100);
 })();
 
 let lastY=0;
