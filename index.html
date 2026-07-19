@@ -116,6 +116,31 @@ nav a:hover::before{clip-path:inset(0 0 0 0);}
 .left-hero .img-stack img{
   position:absolute;top:0;left:0;width:100%;height:100%;object-fit:cover;
 }
+
+/* Hero loader — shown only if hero images take >100ms to load */
+.hero-loader{
+  position:absolute;inset:0;
+  display:flex;align-items:center;justify-content:center;
+  z-index:5;
+  background:#EAE9E7;
+  opacity:0;pointer-events:none;
+  transition:opacity 0.4s ease;
+}
+.hero-loader.show{opacity:1;pointer-events:auto;}
+.hero-loader .sunflower-stack{
+  position:relative;width:130px;height:260px;
+}
+.hero-loader .sunflower-stack img{
+  position:absolute;top:0;left:0;width:100%;height:100%;object-fit:contain;
+}
+.hero-loader .sunflower-stack .sf-color{
+  clip-path:inset(100% 0 0 0);
+  animation:heroFillUp 2.8s ease-in-out infinite;
+}
+@keyframes heroFillUp{
+  0%, 8%    { clip-path: inset(100% 0 0 0); }
+  85%, 100% { clip-path: inset(0 0 0 0); }
+}
 /* Alternate between hero1 (color) and hero3 (B&W) on a 12s cycle */
 .left-hero .img-hero-1{z-index:1;}
 .left-hero .img-hero-2{z-index:2;opacity:0;animation:blossom 12s ease-in-out infinite;}
@@ -229,6 +254,12 @@ nav a:hover::before{clip-path:inset(0 0 0 0);}
 
 <div class="page-hero">
   <div class="left-hero">
+    <div class="hero-loader" id="heroLoader" aria-hidden="true">
+      <div class="sunflower-stack">
+        <img src="/justsunflower-bw.png" alt="">
+        <img class="sf-color" src="/justsunflower-color.png" alt="">
+      </div>
+    </div>
     <div class="postcard-frame">
       <div class="img-stack">
         <img class="img-hero-1" src="hero3.png" alt="Botanical illustration — B&W">
@@ -272,6 +303,26 @@ function toggleMenu(){
   document.getElementById('nav').classList.toggle('menu-open');
 }
 document.getElementById('hamburger').addEventListener('click', toggleMenu);
+
+/* Show hero loader only if the images take > 100ms to load — avoids a flash on cached visits */
+(function(){
+  const loader = document.getElementById('heroLoader');
+  if(!loader) return;
+  const imgs = document.querySelectorAll('.left-hero .img-stack img');
+  if(imgs.length === 0) return;
+  let remaining = imgs.length;
+  let allLoaded = false;
+  const done = () => { if(--remaining <= 0){ allLoaded = true; loader.classList.remove('show'); } };
+  imgs.forEach(img => {
+    if(img.complete && img.naturalWidth > 0) done();
+    else {
+      img.addEventListener('load', done, {once:true});
+      img.addEventListener('error', done, {once:true});
+    }
+  });
+  // Only reveal the loader if images haven't finished within 100ms
+  setTimeout(() => { if(!allLoaded) loader.classList.add('show'); }, 100);
+})();
 
 let lastY=0;
 const navEl=document.getElementById('nav');
