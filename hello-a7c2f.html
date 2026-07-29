@@ -1,0 +1,156 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Hi, I'm Harry</title>
+<meta name="robots" content="noindex, nofollow">
+<link rel="icon" type="image/png" href="/favicon.png">
+<link href="https://fonts.googleapis.com/css2?family=Brygada+1918:ital,wght@0,400;0,500;0,600;0,700;1,400;1,500;1,600;1,700&display=swap" rel="stylesheet">
+<style>
+*{margin:0;padding:0;box-sizing:border-box;}
+html,body{
+  width:100%;min-height:100vh;
+  font-family:'Brygada 1918',serif;
+  background:#EAE9E7;color:#1a1a1a;
+  -webkit-font-smoothing:antialiased;
+}
+.card{
+  max-width:420px;
+  margin:0 auto;
+  padding:60px 32px 48px;
+  display:flex;flex-direction:column;
+  align-items:center;
+  text-align:center;
+  min-height:100vh;
+}
+.portrait{
+  width:120px;height:120px;
+  border-radius:50%;
+  object-fit:cover;
+  margin-bottom:24px;
+  box-shadow:0 4px 20px rgba(0,0,0,0.08), 0 2px 6px rgba(0,0,0,0.05);
+  background:#d8d5cf; /* placeholder color while image loads / if missing */
+}
+.name{
+  font-size:32px;
+  font-weight:700;
+  letter-spacing:-.3px;
+  margin-bottom:14px;
+}
+.greeting{
+  font-size:15px;
+  color:#3a3a3a;
+  line-height:1.7;
+  margin-bottom:6px;
+  max-width:320px;
+}
+.subgreeting{
+  font-size:13px;
+  color:#8a857b;
+  font-style:italic;
+  margin-bottom:36px;
+}
+.divider{
+  width:60px;
+  height:1px;
+  background:rgba(26,26,26,0.15);
+  margin:0 auto 32px;
+}
+.contacts{
+  width:100%;
+  display:flex;flex-direction:column;
+  gap:2px;
+}
+.contact{
+  display:flex;
+  align-items:center;
+  justify-content:space-between;
+  padding:16px 20px;
+  color:#1a1a1a;
+  text-decoration:none;
+  border-bottom:1px solid rgba(26,26,26,0.08);
+  transition:background 0.2s ease, transform 0.2s ease;
+  min-height:56px;
+}
+.contact:first-child{border-top:1px solid rgba(26,26,26,0.08);}
+a.contact:hover, a.contact:active{
+  background:rgba(196,122,58,0.06);
+}
+a.contact:active{transform:scale(0.98);}
+.contact-text{cursor:default;}
+.contact-label{
+  font-size:14px;
+  font-weight:600;
+  letter-spacing:.3px;
+}
+.contact-handle{
+  font-size:13px;
+  color:#8a857b;
+  font-family:'Brygada 1918',serif;
+  font-style:italic;
+  max-width:60%;
+  text-align:right;
+  overflow:hidden;
+  text-overflow:ellipsis;
+  white-space:nowrap;
+}
+.footer{
+  margin-top:auto;
+  padding-top:40px;
+  font-size:12px;
+  color:#b0a99e;
+}
+.footer a{
+  color:#c47a3a;
+  text-decoration:none;
+  border-bottom:1px solid transparent;
+  transition:border-color .2s;
+}
+.footer a:hover{border-bottom-color:#c47a3a;}
+
+@media(max-width:420px){
+  .card{padding:48px 24px 40px;}
+  .portrait{width:104px;height:104px;}
+  .name{font-size:28px;}
+}
+</style>
+</head>
+<body>
+
+<div class="card">
+  <img class="portrait" src="/hello-portrait.jpg" alt="Harry Gandhi">
+  <h1 class="name">Hi, I'm Harry.</h1>
+  <p class="greeting">Nice to meet you.</p>
+  <p class="subgreeting">Here's where you'll find me.</p>
+
+  <div class="contacts">
+    <a class="contact" href="https://signal.me/#eu/harry.1089" target="_blank" rel="noopener">
+      <span class="contact-label">Signal</span>
+      <span class="contact-handle">harry.1089</span>
+    </a>
+    <div class="contact contact-text">
+      <span class="contact-label">WhatsApp</span>
+      <span class="contact-handle">theharrygandhi</span>
+    </div>
+    <a class="contact" href="mailto:harry.m.gandhi@gmail.com">
+      <span class="contact-label">Email</span>
+      <span class="contact-handle">harry.m.gandhi@gmail.com</span>
+    </a>
+    <a class="contact" href="https://x.com/TheHarryGandhi" target="_blank" rel="noopener">
+      <span class="contact-label">X / Twitter</span>
+      <span class="contact-handle">@TheHarryGandhi</span>
+    </a>
+    <a class="contact" href="https://www.linkedin.com/in/harrygandhi/" target="_blank" rel="noopener">
+      <span class="contact-label">LinkedIn</span>
+      <span class="contact-handle">linkedin.com/in/harrygandhi</span>
+    </a>
+  </div>
+
+  <p class="footer">
+    <a href="https://harrygandhi.com" target="_blank" rel="noopener">harrygandhi.com</a>
+  </p>
+</div>
+
+</body>
+</html>
