@@ -40,6 +40,38 @@ body{
   margin-bottom:44px;
   font-style:italic;
 }
+
+/* Postcard-framed butterfly — sits between the message and the "back home" link */
+.postcard{
+  position:relative;
+  display:inline-block;
+  background:#fff;
+  padding:8px;
+  margin:0 auto 48px;
+  box-shadow:0 6px 22px rgba(0,0,0,0.10), 0 2px 6px rgba(0,0,0,0.06);
+  max-width:100%;
+}
+.postcard img{
+  display:block;
+  width:100%;
+  max-width:440px;
+  height:auto;
+}
+.postcard .tape{
+  position:absolute;
+  background:linear-gradient(170deg,
+    rgba(240, 228, 195, 0.55) 0%,
+    rgba(220, 208, 175, 0.45) 50%,
+    rgba(240, 228, 195, 0.55) 100%);
+  border-left:1px dashed rgba(150, 135, 105, 0.18);
+  border-right:1px dashed rgba(150, 135, 105, 0.18);
+  box-shadow:0 1px 2px rgba(0,0,0,0.06);
+  z-index:3;
+  pointer-events:none;
+}
+.postcard .tape.tl{top:-9px; left:20px; width:72px; height:20px; transform:rotate(-9deg);}
+.postcard .tape.tr{top:-9px; right:20px; width:72px; height:20px; transform:rotate(7deg);}
+.postcard .tape.bc{bottom:-9px; left:50%; margin-left:-38px; width:76px; height:20px; transform:rotate(-3deg);}
 .home{
   display:inline-block;
   font-size:15px;
@@ -59,6 +91,12 @@ body{
 <div class="wrap">
   <div class="four">404</div>
   <p class="msg">This page seems to live in the in-between.</p>
+  <div class="postcard">
+    <div class="tape tl"></div>
+    <div class="tape tr"></div>
+    <div class="tape bc"></div>
+    <img src="/butterfly-new.png" alt="">
+  </div>
   <a class="home" href="/"><span class="arrow">←</span> back home</a>
 </div>
 
