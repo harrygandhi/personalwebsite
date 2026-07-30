@@ -10,7 +10,7 @@
 <style>
 *{margin:0;padding:0;box-sizing:border-box;}
 html,body{
-  width:100%;min-height:100vh;
+  width:100%;height:100vh;height:100dvh;overflow:hidden;
   font-family:'Brygada 1918',serif;
   background:#EAE9E7;color:#1a1a1a;
   -webkit-font-smoothing:antialiased;
@@ -19,42 +19,44 @@ body{
   display:flex;
   align-items:center;
   justify-content:center;
-  padding:40px 24px;
+  padding:clamp(16px, 3vh, 40px) 24px;
 }
 .wrap{
   max-width:520px;
   text-align:center;
 }
 .four{
-  font-size:clamp(96px, 20vw, 160px);
+  font-size:clamp(64px, 12vh, 128px);
   font-weight:700;
   line-height:1;
   letter-spacing:-.04em;
   color:#1a1a1a;
-  margin-bottom:36px;
+  margin-bottom:clamp(16px, 3vh, 36px);
 }
 .msg{
-  font-size:clamp(18px, 3.6vw, 22px);
-  line-height:1.55;
+  font-size:clamp(15px, 2.4vh, 22px);
+  line-height:1.5;
   color:#3a3a3a;
-  margin-bottom:44px;
+  margin-bottom:clamp(20px, 3.5vh, 44px);
   font-style:italic;
 }
 
-/* Postcard-framed butterfly — sits between the message and the "back home" link */
+/* Postcard-framed butterfly — sits between the message and the "back home" link.
+   Image sized so total content always fits the viewport (no scroll). */
 .postcard{
   position:relative;
   display:inline-block;
   background:#fff;
   padding:8px;
-  margin:0 auto 48px;
+  margin:0 auto clamp(20px, 3.5vh, 48px);
   box-shadow:0 6px 22px rgba(0,0,0,0.10), 0 2px 6px rgba(0,0,0,0.06);
   max-width:100%;
 }
 .postcard img{
   display:block;
-  width:100%;
-  max-width:440px;
+  max-width:min(440px, 82vw);
+  max-height:34vh;
+  width:auto;
   height:auto;
 }
 .postcard .tape{
