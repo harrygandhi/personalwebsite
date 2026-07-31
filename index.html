@@ -178,8 +178,22 @@ nav a:hover::before{clip-path:inset(0 0 0 0);}
 .intro{max-width:460px;}
 .intro h1{font-size:32px;font-weight:700;line-height:1.2;margin-bottom:28px;letter-spacing:-.3px;}
 .intro p{font-size:15px;color:#3a3a3a;line-height:1.85;margin-bottom:20px;}
-.intro a{color:#c47a3a;text-decoration:none;border-bottom:1px solid transparent;transition:border-color .2s;}
-.intro a:hover{border-bottom-color:#c47a3a;}
+.intro a{color:#c47a3a;text-decoration:none;position:relative;}
+.intro a::before{
+  content:'';
+  position:absolute;
+  left:-2px;right:-2px;
+  bottom:-2px;
+  height:2px;
+  background:#c47a3a;
+  filter:url(#roughline);
+  clip-path:inset(0 100% 0 0);
+  transition:clip-path 0.3s ease-out;
+  pointer-events:none;
+}
+.intro a:hover::before{clip-path:inset(0 0 0 0);}
+/* The sparkle link has its own tie-dye hover effect — skip the underline */
+.intro a.tie-dye-sparkle::before{display:none;}
 
 /* Hamburger — hidden on desktop */
 .hamburger{
@@ -228,7 +242,7 @@ nav a:hover::before{clip-path:inset(0 0 0 0);}
   .page-hero{flex-direction:column;}
   .left-hero{display:none;}
   .right{width:100%;margin-left:0;padding:60px 28px;min-height:100vh;}
-  .credit{position:static;margin-top:40px;left:auto;transform:none;width:auto;max-width:none;align-self:stretch;text-align:left;}
+  .credit{position:static;margin-top:40px;left:auto;transform:none;width:100%;max-width:460px;text-align:left;}
   .intro h1{font-size:26px;}
 }
 </style>
