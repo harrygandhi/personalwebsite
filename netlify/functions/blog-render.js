@@ -61,6 +61,10 @@ function buildMetaBlock({ title, preview, author, imageUrl, slug }) {
   const fullTitle = title;
   const description = preview || `An essay by ${author} on harrygandhi.com`;
   const url = `${SITE_URL}/writing/${encodeURIComponent(slug)}`;
+  // Default to the site's shared shrubbery image (same one as the /writing
+  // landing page). A per-essay Card Image in Notion overrides if set.
+  const usingDefault = !imageUrl;
+  const shareImage = imageUrl || `${SITE_URL}/og-image.png`;
   const parts = [
     `<meta name="description" content="${escapeAttr(description)}">`,
     `<meta property="og:title" content="${escapeAttr(fullTitle)}">`,
@@ -68,13 +72,17 @@ function buildMetaBlock({ title, preview, author, imageUrl, slug }) {
     `<meta property="og:type" content="article">`,
     `<meta property="og:url" content="${escapeAttr(url)}">`,
     `<meta property="og:site_name" content="Harry Gandhi">`,
-    `<meta name="twitter:card" content="${imageUrl ? 'summary_large_image' : 'summary'}">`,
+    `<meta property="og:image" content="${escapeAttr(shareImage)}">`,
+    `<meta property="og:image:alt" content="Botanical illustration — Harry Gandhi">`,
+    `<meta name="twitter:card" content="summary_large_image">`,
     `<meta name="twitter:title" content="${escapeAttr(fullTitle)}">`,
-    `<meta name="twitter:description" content="${escapeAttr(description)}">`
+    `<meta name="twitter:description" content="${escapeAttr(description)}">`,
+    `<meta name="twitter:image" content="${escapeAttr(shareImage)}">`,
   ];
-  if (imageUrl) {
-    parts.push(`<meta property="og:image" content="${escapeAttr(imageUrl)}">`);
-    parts.push(`<meta name="twitter:image" content="${escapeAttr(imageUrl)}">`);
+  if (usingDefault) {
+    parts.push(`<meta property="og:image:type" content="image/png">`);
+    parts.push(`<meta property="og:image:width" content="1200">`);
+    parts.push(`<meta property="og:image:height" content="630">`);
   }
   return parts.join('\n');
 }
