@@ -434,25 +434,26 @@ function renderPosts(pages){
   };
 
   // Featured essays: odd Feature Order -> left, even -> right
-  // Unfeatured essays: distribute to whichever column has less accumulated height,
-  // BUT avoid placing art cards side-by-side with another art card across columns.
+  // Unfeatured essays: distribute to the column with less accumulated height,
+  // BUT avoid stacking two art cards within the same column back-to-back.
   const leftEssays = [];
   const rightEssays = [];
   let leftH = 0, rightH = 0;
-  const artSpans = { left: [], right: [] }; // {start, end} y-ranges of art-only cards
-
-  const overlapsArt = (col, start, end) =>
-    artSpans[col].some(a => !(end < a.start || start > a.end));
+  // Track y-position where the most recent art card ended, per column
+  const MIN_GAP_BETWEEN_ART = 350; // px — need at least this much non-art between art cards
+  const lastArtEnd = { left: -Infinity, right: -Infinity };
 
   featured.forEach(e => {
     const h = estHeight(e);
     const goLeft = e.featureOrder != null && e.featureOrder % 2 === 1;
     if (goLeft) {
-      if (e.cardType === 'art-only') artSpans.left.push({start: leftH, end: leftH + h});
-      leftEssays.push(e); leftH += h;
+      leftEssays.push(e);
+      if (e.cardType === 'art-only') lastArtEnd.left = leftH + h;
+      leftH += h;
     } else {
-      if (e.cardType === 'art-only') artSpans.right.push({start: rightH, end: rightH + h});
-      rightEssays.push(e); rightH += h;
+      rightEssays.push(e);
+      if (e.cardType === 'art-only') lastArtEnd.right = rightH + h;
+      rightH += h;
     }
   });
 
@@ -460,21 +461,22 @@ function renderPosts(pages){
     const h = estHeight(e);
     let goLeft = leftH <= rightH;
     if (e.cardType === 'art-only') {
-      // Check if placing here would sit next to an art card in the opposite column
-      const startIfLeft = leftH, endIfLeft = leftH + h;
-      const startIfRight = rightH, endIfRight = rightH + h;
-      const leftClashes = overlapsArt('right', startIfLeft, endIfLeft);
-      const rightClashes = overlapsArt('left', startIfRight, endIfRight);
-      // Prefer no-clash; if the natural (shorter) choice clashes but the other doesn't, switch.
-      if (goLeft && leftClashes && !rightClashes) goLeft = false;
-      else if (!goLeft && rightClashes && !leftClashes) goLeft = true;
+      // Would this art card stack too close to the previous art card in the same column?
+      const wouldStackLeft = (leftH - lastArtEnd.left) < MIN_GAP_BETWEEN_ART;
+      const wouldStackRight = (rightH - lastArtEnd.right) < MIN_GAP_BETWEEN_ART;
+      // Prefer non-stacking column; only switch if the natural choice would stack
+      // but the other column wouldn't.
+      if (goLeft && wouldStackLeft && !wouldStackRight) goLeft = false;
+      else if (!goLeft && wouldStackRight && !wouldStackLeft) goLeft = true;
     }
     if (goLeft) {
-      if (e.cardType === 'art-only') artSpans.left.push({start: leftH, end: leftH + h});
-      leftEssays.push(e); leftH += h;
+      leftEssays.push(e);
+      if (e.cardType === 'art-only') lastArtEnd.left = leftH + h;
+      leftH += h;
     } else {
-      if (e.cardType === 'art-only') artSpans.right.push({start: rightH, end: rightH + h});
-      rightEssays.push(e); rightH += h;
+      rightEssays.push(e);
+      if (e.cardType === 'art-only') lastArtEnd.right = rightH + h;
+      rightH += h;
     }
   });
 
