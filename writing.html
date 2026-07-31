@@ -434,21 +434,56 @@ function renderPosts(pages){
   };
 
   // Featured essays: odd Feature Order -> left, even -> right
-  // Unfeatured essays: distribute to whichever column has less accumulated height
+  // Unfeatured essays: distribute to whichever column has less accumulated height,
+  // BUT avoid placing art cards side-by-side with another art card across columns.
   const leftEssays = [];
   const rightEssays = [];
   let leftH = 0, rightH = 0;
+  const artSpans = { left: [], right: [] }; // {start, end} y-ranges of art-only cards
+
+  const overlapsArt = (col, start, end) =>
+    artSpans[col].some(a => !(end < a.start || start > a.end));
+
   featured.forEach(e => {
     const h = estHeight(e);
     const goLeft = e.featureOrder != null && e.featureOrder % 2 === 1;
-    if (goLeft) { leftEssays.push(e); leftH += h; }
-    else { rightEssays.push(e); rightH += h; }
+    if (goLeft) {
+      if (e.cardType === 'art-only') artSpans.left.push({start: leftH, end: leftH + h});
+      leftEssays.push(e); leftH += h;
+    } else {
+      if (e.cardType === 'art-only') artSpans.right.push({start: rightH, end: rightH + h});
+      rightEssays.push(e); rightH += h;
+    }
   });
+
   unfeatured.forEach(e => {
     const h = estHeight(e);
-    if (leftH <= rightH) { leftEssays.push(e); leftH += h; }
-    else { rightEssays.push(e); rightH += h; }
+    let goLeft = leftH <= rightH;
+    if (e.cardType === 'art-only') {
+      // Check if placing here would sit next to an art card in the opposite column
+      const startIfLeft = leftH, endIfLeft = leftH + h;
+      const startIfRight = rightH, endIfRight = rightH + h;
+      const leftClashes = overlapsArt('right', startIfLeft, endIfLeft);
+      const rightClashes = overlapsArt('left', startIfRight, endIfRight);
+      // Prefer no-clash; if the natural (shorter) choice clashes but the other doesn't, switch.
+      if (goLeft && leftClashes && !rightClashes) goLeft = false;
+      else if (!goLeft && rightClashes && !leftClashes) goLeft = true;
+    }
+    if (goLeft) {
+      if (e.cardType === 'art-only') artSpans.left.push({start: leftH, end: leftH + h});
+      leftEssays.push(e); leftH += h;
+    } else {
+      if (e.cardType === 'art-only') artSpans.right.push({start: rightH, end: rightH + h});
+      rightEssays.push(e); rightH += h;
+    }
   });
+
+  const formatDate = (iso) => {
+    if (!iso) return '';
+    const d = new Date(iso + 'T00:00:00');
+    if (isNaN(d)) return '';
+    return d.toLocaleDateString('en-US', { month: 'short', day: 'numeric', year: 'numeric' });
+  };
 
   const buildCard = (e) => {
     const tapeStyles = [
@@ -457,6 +492,14 @@ function renderPosts(pages){
       'left:50%;margin-left:-22px;transform:rotate(-1deg)'
     ];
     const tape = tapeStyles[e.i % 3];
+    const dateStr = formatDate(e.publishedDate);
+    // Author + date meta line — inline with a dot separator when both present
+    const meta = (prefix) => {
+      const parts = [];
+      if (e.author) parts.push(`${prefix}${e.author}`);
+      if (dateStr) parts.push(dateStr);
+      return parts.length ? `<div class="author">${parts.join(' · ')}</div>` : '';
+    };
     let el = null;
 
     if (e.cardType === 'quote') {
@@ -468,7 +511,7 @@ function renderPosts(pages){
         ${e.imageUrl ? `<img src="${e.imageUrl}" alt="">` : ''}
         ${e.title && e.title !== 'Untitled' ? `<h3>${e.title}</h3>` : ''}
         ${e.preview ? `<div class="quote-text">${e.preview}</div>` : ''}
-        ${e.author ? `<div class="author">— ${e.author}</div>` : ''}
+        ${meta('— ')}
         <div class="tag">#fiction</div>`;
     } else if (e.cardType === 'art-only') {
       if (e.imageUrl) {
@@ -485,6 +528,7 @@ function renderPosts(pages){
         <img src="${e.imageUrl}" alt="">
         <div class="overlay">
           <h3>${e.title}</h3>
+          ${meta('by ')}
           ${e.preview ? `<div class="preview">${e.preview}</div>` : ''}
         </div>`;
     } else {
@@ -495,7 +539,7 @@ function renderPosts(pages){
       el.innerHTML = `
         <div class="tape" style="${tape}"></div>
         <h3>${e.title}</h3>
-        ${e.author ? `<div class="author">by ${e.author}</div>` : ''}
+        ${meta('by ')}
         ${e.preview ? `<div class="preview">${e.preview}</div>` : ''}`;
     }
 
