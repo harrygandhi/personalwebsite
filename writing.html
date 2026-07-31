@@ -388,82 +388,102 @@ function renderPosts(pages){
   masonry.appendChild(colLeft);
   masonry.appendChild(colRight);
 
-  pages.forEach((page, i) => {
+  // Parse each Notion page into a simpler shape, keeping the original index
+  // so tape rotations stay varied across cards.
+  const essays = pages.map((page, i) => {
     const props = page.properties;
-    const title = props.Title?.title?.[0]?.plain_text || 'Untitled';
-    const slug = props.Slug?.rich_text?.[0]?.plain_text || '';
-    const preview = (props.Preview?.rich_text || []).map(t => t.plain_text).join('');
-    const author = props.Author?.rich_text?.[0]?.plain_text || '';
-    const cardType = props['Card Type']?.select?.name || 'text';
-    const cardColor = props['Card Color']?.select?.name || 'white';
-    const imageFile = props['Card Image']?.files?.[0];
-    const imageUrl = imageFile?.file?.url || imageFile?.external?.url || '';
-    const order = props.Order?.number || (i + 1);
+    return {
+      i,
+      title: props.Title?.title?.[0]?.plain_text || 'Untitled',
+      slug: props.Slug?.rich_text?.[0]?.plain_text || '',
+      preview: (props.Preview?.rich_text || []).map(t => t.plain_text).join(''),
+      author: props.Author?.rich_text?.[0]?.plain_text || '',
+      cardType: props['Card Type']?.select?.name || 'text',
+      cardColor: props['Card Color']?.select?.name || 'white',
+      imageUrl: (() => {
+        const f = props['Card Image']?.files?.[0];
+        return f?.file?.url || f?.external?.url || '';
+      })(),
+      featured: !!props.Featured?.checkbox,
+      featureOrder: props['Feature Order']?.number ?? null,
+      publishedDate: props['Published Date']?.date?.start || '',
+    };
+  });
 
-    const rot = rotations[i % rotations.length];
-    const targetCol = (order % 2 === 1) ? colLeft : colRight;
-    let el;
+  // Split into featured (by Feature Order asc) and unfeatured (by Published Date desc)
+  const featured = essays
+    .filter(e => e.featured)
+    .sort((a, b) => (a.featureOrder ?? Infinity) - (b.featureOrder ?? Infinity));
+  const unfeatured = essays
+    .filter(e => !e.featured)
+    .sort((a, b) => (b.publishedDate || '').localeCompare(a.publishedDate || ''));
 
-    if(cardType === 'quote'){
-      const colorClass = colorMap[cardColor] || '';
+  // Featured essays: odd Feature Order -> left, even -> right
+  // Unfeatured essays: distribute to whichever column has fewer cards (keeps counts balanced)
+  const leftEssays = [];
+  const rightEssays = [];
+  featured.forEach(e => {
+    const goLeft = e.featureOrder != null && e.featureOrder % 2 === 1;
+    (goLeft ? leftEssays : rightEssays).push(e);
+  });
+  unfeatured.forEach(e => {
+    (leftEssays.length <= rightEssays.length ? leftEssays : rightEssays).push(e);
+  });
+
+  const buildCard = (e) => {
+    const tapeStyles = [
+      'left:20px;transform:rotate(-2deg)',
+      'right:20px;transform:rotate(2deg)',
+      'left:50%;margin-left:-22px;transform:rotate(-1deg)'
+    ];
+    const tape = tapeStyles[e.i % 3];
+    let el = null;
+
+    if (e.cardType === 'quote') {
+      const colorClass = colorMap[e.cardColor] || '';
       el = document.createElement('div');
-      el.className = 'card-quote' + (colorClass ? ' '+colorClass : '');
-      const tapeStyles = [
-        'left:20px;transform:rotate(-2deg)',
-        'right:20px;transform:rotate(2deg)',
-        'left:50%;margin-left:-22px;transform:rotate(-1deg)'
-      ];
+      el.className = 'card-quote' + (colorClass ? ' ' + colorClass : '');
       el.innerHTML = `
-        <div class="tape" style="${tapeStyles[i%3]}"></div>
-        ${imageUrl ? `<img src="${imageUrl}" alt="">` : ''}
-        ${title && title !== 'Untitled' ? `<h3>${title}</h3>` : ''}
-        ${preview ? `<div class="quote-text">${preview}</div>` : ''}
-        ${author ? `<div class="author">— ${author}</div>` : ''}
+        <div class="tape" style="${tape}"></div>
+        ${e.imageUrl ? `<img src="${e.imageUrl}" alt="">` : ''}
+        ${e.title && e.title !== 'Untitled' ? `<h3>${e.title}</h3>` : ''}
+        ${e.preview ? `<div class="quote-text">${e.preview}</div>` : ''}
+        ${e.author ? `<div class="author">— ${e.author}</div>` : ''}
         <div class="tag">#fiction</div>`;
-    } else if(cardType === 'art-only'){
-      if(imageUrl){
+    } else if (e.cardType === 'art-only') {
+      if (e.imageUrl) {
         el = document.createElement('div');
         el.className = 'art-card';
-        el.innerHTML = `<img src="${imageUrl}" alt="${title}">`;
+        el.innerHTML = `<img src="${e.imageUrl}" alt="${e.title}">`;
       }
-    } else if(cardType === 'image' && imageUrl){
+    } else if (e.cardType === 'image' && e.imageUrl) {
       el = document.createElement('div');
       el.className = 'card-img';
-      el.onclick = () => location.href = `/writing/${slug}`;
-      const tapeStylesImg = [
-        'left:20px;transform:rotate(-2deg)',
-        'right:20px;transform:rotate(2deg)',
-        'left:50%;margin-left:-22px;transform:rotate(-1deg)'
-      ];
+      el.onclick = () => location.href = `/writing/${e.slug}`;
       el.innerHTML = `
-        <div class="tape" style="${tapeStylesImg[i%3]}"></div>
-        <img src="${imageUrl}" alt="">
+        <div class="tape" style="${tape}"></div>
+        <img src="${e.imageUrl}" alt="">
         <div class="overlay">
-          <h3>${title}</h3>
-          ${preview ? `<div class="preview">${preview}</div>` : ''}
+          <h3>${e.title}</h3>
+          ${e.preview ? `<div class="preview">${e.preview}</div>` : ''}
         </div>`;
     } else {
-      const colorClass = colorMap[cardColor] || '';
+      const colorClass = colorMap[e.cardColor] || '';
       el = document.createElement('div');
-      el.className = 'card' + (colorClass ? ' '+colorClass : '');
-      el.onclick = () => location.href = `/writing/${slug}`;
-      const tapeStyles = [
-        'left:20px;transform:rotate(-2deg)',
-        'right:20px;transform:rotate(2deg)',
-        'left:50%;margin-left:-22px;transform:rotate(-1deg)'
-      ];
+      el.className = 'card' + (colorClass ? ' ' + colorClass : '');
+      el.onclick = () => location.href = `/writing/${e.slug}`;
       el.innerHTML = `
-        <div class="tape" style="${tapeStyles[i%3]}"></div>
-        <h3>${title}</h3>
-        ${author ? `<div class="author">by ${author}</div>` : ''}
-        ${preview ? `<div class="preview">${preview}</div>` : ''}`;
+        <div class="tape" style="${tape}"></div>
+        <h3>${e.title}</h3>
+        ${e.author ? `<div class="author">by ${e.author}</div>` : ''}
+        ${e.preview ? `<div class="preview">${e.preview}</div>` : ''}`;
     }
 
-    if(el){
-      el.style.order = order;
-      targetCol.appendChild(el);
-    }
-  });
+    return el;
+  };
+
+  leftEssays.forEach(e => { const el = buildCard(e); if (el) colLeft.appendChild(el); });
+  rightEssays.forEach(e => { const el = buildCard(e); if (el) colRight.appendChild(el); });
 }
 
 /* ═══════════════════════════════════════════════════════════
