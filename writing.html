@@ -418,16 +418,36 @@ function renderPosts(pages){
     .filter(e => !e.featured)
     .sort((a, b) => (b.publishedDate || '').localeCompare(a.publishedDate || ''));
 
+  // Rough per-card height estimate — used to balance column heights, not counts
+  const estHeight = (e) => {
+    const gap = 24; // matches CSS gap between cards
+    if (e.cardType === 'art-only') return 460 + gap;
+    if (e.cardType === 'image') return 300 + Math.ceil(e.preview.length / 60) * 18 + gap;
+    if (e.cardType === 'quote') {
+      const imgH = e.imageUrl ? 200 : 0;
+      return 100 + imgH + Math.ceil(e.preview.length / 40) * 22 + gap;
+    }
+    // text card
+    const titleH = Math.ceil(e.title.length / 24) * 28;
+    const previewH = Math.ceil(e.preview.length / 40) * 20;
+    return 60 + titleH + previewH + 40 + gap;
+  };
+
   // Featured essays: odd Feature Order -> left, even -> right
-  // Unfeatured essays: distribute to whichever column has fewer cards (keeps counts balanced)
+  // Unfeatured essays: distribute to whichever column has less accumulated height
   const leftEssays = [];
   const rightEssays = [];
+  let leftH = 0, rightH = 0;
   featured.forEach(e => {
+    const h = estHeight(e);
     const goLeft = e.featureOrder != null && e.featureOrder % 2 === 1;
-    (goLeft ? leftEssays : rightEssays).push(e);
+    if (goLeft) { leftEssays.push(e); leftH += h; }
+    else { rightEssays.push(e); rightH += h; }
   });
   unfeatured.forEach(e => {
-    (leftEssays.length <= rightEssays.length ? leftEssays : rightEssays).push(e);
+    const h = estHeight(e);
+    if (leftH <= rightH) { leftEssays.push(e); leftH += h; }
+    else { rightEssays.push(e); rightH += h; }
   });
 
   const buildCard = (e) => {
