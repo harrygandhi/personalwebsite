@@ -185,7 +185,29 @@ hr{border:none;border-top:1px solid #e8e4df;margin:72px 0 0;}
 .bs-lnk:hover{text-decoration:underline;}
 .bs-lnk::after{content:' ↗';font-size:11px;}
 
+/* Optional per-essay side art — fixed to the left of the content column.
+   White image backgrounds blend into the page background via multiply. */
+.side-art{
+  position:fixed;
+  top:50%;
+  left:clamp(24px, 4vw, 80px);
+  transform:translateY(-50%);
+  width:min(28vw, 360px);
+  max-height:78vh;
+  z-index:1;
+  pointer-events:none;
+  mix-blend-mode:multiply;
+}
+.side-art img{
+  display:block;
+  width:100%;
+  max-height:78vh;
+  height:auto;
+  object-fit:contain;
+}
+
 @media(max-width:900px){
+  .side-art{display:none !important;}
   .content{margin-left:0;max-width:100%;padding-left:20px;padding-right:20px;}
   .page{padding:32px 0 80px;}
   h1{font-size:28px;}
@@ -266,6 +288,11 @@ hr{border:none;border-top:1px solid #e8e4df;margin:72px 0 0;}
     <img class="sf-color" src="/justsunflower-color.png" alt="">
   </div>
   <div class="loading-text">Loading...</div>
+</div>
+
+<!-- Optional per-essay side art — hidden by default; setSideArt() reveals it if the essay has one -->
+<div class="side-art" id="sideArt" style="display:none;" aria-hidden="true">
+  <img id="sideArtImg" alt="">
 </div>
 
 <div class="page" id="pageWrap" style="display:none;">
@@ -567,11 +594,22 @@ function wireUpAnnotations(annotations){
 /* ═══════════════════════════════════════════════════════════
    MAIN — FETCH PAGE + ANNOTATIONS FROM NOTION
    ═══════════════════════════════════════════════════════════ */
+function setSideArt(url){
+  const wrap = document.getElementById('sideArt');
+  const img = document.getElementById('sideArtImg');
+  if(!wrap || !img || !url){ if(wrap) wrap.style.display = 'none'; return; }
+  img.onload = () => { wrap.style.display = ''; };
+  img.onerror = () => { wrap.style.display = 'none'; };
+  img.src = url;
+}
+
 async function loadPost(){
-  // Try to get slug from clean URL path (/writing/slug) or query param fallback
+  // Try to get slug from clean URL path (/writing/slug); fall back to ?slug= query param (useful for local testing)
   const pathParts = window.location.pathname.split('/writing/');
-  const slug = pathParts.length > 1 ? decodeURIComponent(pathParts[1].replace(/\/$/,'')) : null;
   const params = new URLSearchParams(window.location.search);
+  const slug = pathParts.length > 1
+    ? decodeURIComponent(pathParts[1].replace(/\/$/,''))
+    : (params.get('slug') || null);
   let pageId = params.get('id');
 
   // If we have a slug but no pageId, query the database to find the page
@@ -602,6 +640,8 @@ async function loadPost(){
 
   if(!pageId){
     showPage();
+    // Try local side-art fallback for the demo/fallback view
+    if(slug) setSideArt(`/side-art/${slug}.jpg`);
     loadDemoAnnotations();
     return;
   }
@@ -637,6 +677,11 @@ async function loadPost(){
     const author = page.properties?.Author?.rich_text?.[0]?.plain_text || 'Harry Gandhi';
     const date = page.properties?.['Published Date']?.date?.start || '';
     const formattedDate = date ? new Date(date).toLocaleDateString('en-US',{year:'numeric',month:'short',day:'numeric'}) : '';
+
+    // Optional "Side Art" — Notion Files & Media field; falls back to /side-art/{slug}.jpg
+    const sideArtFile = page.properties?.['Side Art']?.files?.[0];
+    const sideArtUrl = sideArtFile?.file?.url || sideArtFile?.external?.url || '';
+    setSideArt(sideArtUrl || (slug ? `/side-art/${slug}.jpg` : ''));
 
     // 4. Render content (excluding the annotation database)
     document.getElementById('postTitle').textContent = title;
