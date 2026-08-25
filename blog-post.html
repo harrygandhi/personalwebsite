@@ -74,6 +74,9 @@ h1{font-size:40px;font-weight:700;line-height:1.18;margin-bottom:16px;letter-spa
 
 .body h2{font-size:19px;font-weight:700;margin:40px 0 16px;}
 .body p{font-size:15px;color:#3a3a3a;line-height:1.85;margin-bottom:20px;}
+/* Compact spacing (poems, list-like posts) — set via Notion "Compact Spacing" checkbox */
+.body.compact p{margin-bottom:4px;}
+.body.compact p:empty{display:none;}
 .body strong{font-weight:600;}
 .body em{font-style:italic;}
 .body ul,.body ol{font-size:15px;color:#3a3a3a;line-height:1.85;margin:0 0 20px 24px;}
@@ -682,6 +685,10 @@ async function loadPost(){
     const sideArtFile = page.properties?.['Side Art']?.files?.[0];
     const sideArtUrl = sideArtFile?.file?.url || sideArtFile?.external?.url || '';
     setSideArt(sideArtUrl || (slug ? `/side-art/${slug}.jpg` : ''));
+
+    // Optional "Compact Spacing" — tightens paragraph margins for poems etc.
+    const compact = !!page.properties?.['Compact Spacing']?.checkbox;
+    document.getElementById('postBody').classList.toggle('compact', compact);
 
     // 4. Render content (excluding the annotation database)
     document.getElementById('postTitle').textContent = title;
