@@ -594,8 +594,8 @@ function genImg(cv, seed) {
 let forceCard = pickForce();
 // First riffle: 3 consecutive force cards (fast pass to plant the seed)
 let deck1 = buildDeck(forceCard, [true, true, true]);
-// Second riffle: force, doozy, force — gap between sightings registers as two distinct impressions
-let deck2 = buildDeck(forceCard, [true, false, true]);
+// Second riffle: two force cards back-to-back — no intermediate doozy
+let deck2 = buildDeck(forceCard, [true, true]);
 let cur = 0, busy = false;
 let userSaidYes = false;
 // Attempt counter — 0 on first run, 1 after "Try again" from the final scene.
@@ -690,7 +690,7 @@ function init() {
     attemptCount++;
     forceCard = pickForce();
     deck1 = buildDeck(forceCard, [true, true, true]);
-    deck2 = buildDeck(forceCard, [true, false, true]);
+    deck2 = buildDeck(forceCard, [true, true]);
     cur = 0;
     userSaidYes = false;
     // If the user went through the reveal branch, drop the dark mode
