@@ -591,23 +591,30 @@ function genImg(cv, seed) {
   const id=ctx.getImageData(0,0,w,h);for(let i=0;i<id.data.length;i+=4){const n=(r()-.5)*15;id.data[i]+=n;id.data[i+1]+=n;id.data[i+2]+=n;}ctx.putImageData(id,0,0);
 }
 
-const forceCard = pickForce();
+let forceCard = pickForce();
 // First riffle: 3 consecutive force cards (fast pass to plant the seed)
-const deck1 = buildDeck(forceCard, [true, true, true]);
+let deck1 = buildDeck(forceCard, [true, true, true]);
 // Second riffle: force, doozy, force — gap between sightings registers as two distinct impressions
-const deck2 = buildDeck(forceCard, [true, false, true]);
+let deck2 = buildDeck(forceCard, [true, false, true]);
 let cur = 0, busy = false;
 let userSaidYes = false;
+// Attempt counter — 0 on first run, 1 after "Try again" from the final scene.
+// Users only get one retry.
+let attemptCount = 0;
 const iSeed = Date.now();
 
 function init() {
   const app = document.getElementById('app');
 
   const S = [
-    () => clickS('Welcome. I\'ve been waiting for you.', { hint: '(click to advance)' }),
+    () => clickS(
+      attemptCount === 0 ? 'Welcome. I\'ve been waiting for you.' : 'Welcome again.',
+      { hint: '(click to advance)' }
+    ),
     () => {
       const s = mk('div','scene active');
-      s.innerHTML = `<div class="scene-text">You ready for a magic trick?</div>
+      const q = attemptCount === 0 ? 'You ready for a magic trick?' : 'You ready for another try?';
+      s.innerHTML = `<div class="scene-text">${q}</div>
         <div class="btn-row"><button class="btn" id="by">Yes</button><button class="btn" id="bn">No</button></div>`;
       af(() => { s.querySelector('#by').onclick = () => go(); s.querySelector('#bn').onclick = () => decl(s); });
       return s;
@@ -675,6 +682,25 @@ function init() {
     document.body.classList.add('reveal-mode');
   };
 
+  // Restart the whole trick with a fresh force card and rebuilt decks.
+  // Increments attemptCount so the second run uses the "Welcome again" copy
+  // and the following final scene no longer offers a Try again.
+  window.restartTrick = function() {
+    if (busy) return;
+    attemptCount++;
+    forceCard = pickForce();
+    deck1 = buildDeck(forceCard, [true, true, true]);
+    deck2 = buildDeck(forceCard, [true, false, true]);
+    cur = 0;
+    userSaidYes = false;
+    // If the user went through the reveal branch, drop the dark mode
+    document.body.classList.remove('reveal-mode');
+    busy = true;
+    const el = app.querySelector('.scene');
+    if (el) { el.classList.add('fade-out'); setTimeout(() => render(0), 500); }
+    else render(0);
+  };
+
   render(0);
 }
 
@@ -703,7 +729,7 @@ function decl(p) {
 function riffleS(theDeck, slower) {
   const s = mk('div','scene active');
   const c = mk('div'); c.id = 'riffle-container'; s.appendChild(c);
-  const base = slower ? 105 : 80;
+  const base = slower ? 117 : 92;
   const extra = slower ? 55 : 35;
   let delay = 400;
   theDeck.forEach(card => {
@@ -899,9 +925,19 @@ function revealParaS() {
 
 function finalS() {
   const s = mk('div','scene active');
+  // Show "Try again" only on the first attempt — users get one retry, then it's just "Return to Homepage".
+  const canRetry = attemptCount === 0;
   s.innerHTML = `<div class="scene-text">Thanks for letting me in.</div>
-    <div class="btn-single"><button class="btn" id="bh">Return to Homepage</button></div>`;
-  af(() => { s.querySelector('#bh').onclick = () => { window.location.href = '/'; }; });
+    <div class="btn-row">
+      ${canRetry ? '<button class="btn" id="bTry">Try again</button>' : ''}
+      <button class="btn" id="bh">Return to Homepage</button>
+    </div>`;
+  af(() => {
+    s.querySelector('#bh').onclick = () => { window.location.href = '/'; };
+    if (canRetry) {
+      s.querySelector('#bTry').onclick = () => window.restartTrick();
+    }
+  });
   return s;
 }
 
