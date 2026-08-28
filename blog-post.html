@@ -105,6 +105,12 @@ h1{font-size:40px;font-weight:700;line-height:1.18;margin-bottom:16px;letter-spa
 .mn-ph{font-size:12.5px;color:#aaa;font-style:italic;margin-bottom:7px;}
 .mn-txt{font-size:12px;color:#888;line-height:1.55;margin-bottom:7px;}
 .mn-txt .hl{color:#c47a3a;font-weight:500;}
+.mn-txt p{margin:0 0 6px 0;}
+.mn-txt p:last-child{margin-bottom:0;}
+.mn-txt ul{margin:0 0 6px 0;padding-left:14px;list-style:disc;}
+.mn-txt ul:last-child{margin-bottom:0;}
+.mn-txt li{margin-bottom:2px;}
+.mn-txt li:last-child{margin-bottom:0;}
 .mn-img{width:100%;display:block;margin-bottom:10px;border-radius:2px;}
 .mn-cap{font-size:10px;color:#aaa;font-style:italic;margin-top:-6px;margin-bottom:8px;}
 .mn-lnk{font-size:12px;color:#c47a3a;text-decoration:none;}
@@ -184,6 +190,12 @@ hr{border:none;border-top:1px solid #e8e4df;margin:72px 0 0;}
 .bs-ph{font-size:13px;color:#aaa;font-style:italic;margin-bottom:10px;}
 .bs-img{width:100%;border-radius:4px;margin:12px 0;}
 .bs-txt{font-size:14px;color:#555;line-height:1.7;margin-bottom:12px;}
+.bs-txt p{margin:0 0 10px 0;}
+.bs-txt p:last-child{margin-bottom:0;}
+.bs-txt ul{margin:0 0 10px 0;padding-left:20px;list-style:disc;}
+.bs-txt ul:last-child{margin-bottom:0;}
+.bs-txt li{margin-bottom:4px;}
+.bs-txt li:last-child{margin-bottom:0;}
 .bs-lnk{font-size:14px;color:#c47a3a;text-decoration:none;}
 .bs-lnk:hover{text-decoration:underline;}
 .bs-lnk::after{content:' ↗';font-size:11px;}
@@ -375,13 +387,36 @@ async function subscribe(inputId){
 /* ═══════════════════════════════════════════════════════════
    BOTTOM SHEET — mobile annotation viewer
    ═══════════════════════════════════════════════════════════ */
+// Format an annotation body from Notion plain-text: preserves newlines as
+// paragraphs, converts lines that start with •, -, or * into a proper <ul>.
+function formatAnnotationBody(text){
+  if(!text) return '';
+  const esc = s => String(s)
+    .replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;');
+  const lines = String(text).split(/\r?\n/);
+  const parts = [];
+  let list = [];
+  let para = [];
+  const flushPara = () => { if(para.length){ parts.push(`<p>${para.join(' ')}</p>`); para = []; } };
+  const flushList = () => { if(list.length){ parts.push(`<ul>${list.map(li => `<li>${li}</li>`).join('')}</ul>`); list = []; } };
+  for(const raw of lines){
+    const line = raw.trim();
+    if(!line){ flushPara(); flushList(); continue; }
+    const m = line.match(/^[•·\-\*]\s+(.*)$/);
+    if(m){ flushPara(); list.push(esc(m[1])); }
+    else { flushList(); para.push(esc(line)); }
+  }
+  flushPara(); flushList();
+  return parts.join('');
+}
+
 function openBs(ann){
   const content = document.getElementById('bsContent');
   let h = '';
   if(ann.label) h += `<div class="bs-ttl">${ann.label}</div>`;
   if(ann.phonetic) h += `<div class="bs-ph">${ann.phonetic}</div>`;
   if(ann.image) h += `<img class="bs-img" src="${ann.image}" alt="">`;
-  if(ann.body) h += `<div class="bs-txt">${ann.body}</div>`;
+  if(ann.body) h += `<div class="bs-txt">${formatAnnotationBody(ann.body)}</div>`;
   if(ann.link) h += `<a class="bs-lnk" href="${ann.link}" target="_blank">Link</a>`;
   content.innerHTML = h;
   document.getElementById('bsOverlay').classList.add('show');
@@ -510,7 +545,7 @@ async function fetchAnnotations(blocks){
       return {
         trigger: (props.Trigger?.title || []).map(t => t.plain_text).join('').trim().toLowerCase(),
         label: props.Label?.rich_text?.[0]?.plain_text || '',
-        body: props.Body?.rich_text?.[0]?.plain_text || '',
+        body: (props.Body?.rich_text || []).map(t => t.plain_text).join('') || '',
         phonetic: props.Phonetic?.rich_text?.[0]?.plain_text || '',
         link: props.Link?.url || props.Link?.rich_text?.[0]?.plain_text || '',
         image: image
@@ -542,7 +577,7 @@ function wireUpAnnotations(annotations){
     if(ann.label) h += `<div class="mn-ttl">${ann.label}</div>`;
     if(ann.phonetic) h += `<div class="mn-ph">${ann.phonetic}</div>`;
     if(ann.image) h += `<img class="mn-img" src="${ann.image}" alt="">`;
-    if(ann.body) h += `<div class="mn-txt">${ann.body}</div>`;
+    if(ann.body) h += `<div class="mn-txt">${formatAnnotationBody(ann.body)}</div>`;
     if(ann.link) h += `<a class="mn-lnk" href="${ann.link}" target="_blank">Link</a>`;
 
     el.innerHTML = h;
