@@ -1,16 +1,18 @@
 # Harry Gandhi Personal Website — Context Document
 
-*Last updated: 2026-05-02 (post-riffle slowdown + hero refresh + poem text)*
+*Last updated: 2026-08-25*
 
 ## Overview
 
 Personal blog/portfolio at **harrygandhi.com**. Static HTML site with Notion as CMS, deployed via Netlify with auto-deploy from GitHub. Font: Brygada 1918. Favicon: custom sunflower PNG (transparent background).
 
-The site currently has four pages:
-1. **`index.html`** — Landing page with bio and blossom hero animation
-2. **`writing.html`** — Essays/poem masonry grid with sunflower loading animation
+Six pages:
+1. **`index.html`** — Home / landing page with bio + botanical hero
+2. **`writing.html`** — Essays masonry grid + poem
 3. **`blog-post.html`** — Individual essay reader, served at clean URLs `/writing/[slug]`
-4. **`magic.html`** — Interactive card trick with optional "red pill" reveal branch
+4. **`magic.html`** — Interactive card trick + Wesley Wang film reveal
+5. **`h3ll0.html`** — Semi-private (unlisted) contact page at `/h3ll0`
+6. **`404.html`** — Custom 404 page (butterfly postcard)
 
 ---
 
@@ -20,10 +22,10 @@ The site currently has four pages:
 |-------|--------|
 | **GitHub** | `https://github.com/harrygandhi/personalwebsite.git` (branch: `main`) |
 | **Hosting** | Netlify (auto-deploys on push to `main`) |
-| **Domain** | harrygandhi.com (Netlify DNS; nameservers at Bluehost: `dns1-4.p04.nsone.net`) |
-| **CMS** | Notion API (key + database ID stored as Netlify env vars: `NOTION_API_KEY`, `NOTION_DATABASE_ID`) |
-| **Email** | MailerLite (API key + group ID hardcoded in each HTML file) |
-| **Serverless** | Netlify Functions at `netlify/functions/notion.js` — proxies Notion API |
+| **Domain** | harrygandhi.com — Netlify DNS, nameservers at Bluehost (`dns1-4.p04.nsone.net`) |
+| **CMS** | Notion API (env vars: `NOTION_API_KEY`, `NOTION_DATABASE_ID`) |
+| **Email** | MailerLite (API key + group ID `181258728256833207` hardcoded in each HTML file) |
+| **Serverless** | Netlify Functions at `netlify/functions/` |
 
 ### Netlify Config (`netlify.toml`)
 ```toml
@@ -38,14 +40,15 @@ The site currently has four pages:
 
 [[redirects]]
   from = "/writing/:slug"
-  to = "/blog-post.html"
+  to = "/.netlify/functions/blog-render/:slug"
   status = 200
 ```
 
 ### Local Development
 - `python -m http.server 8000` from project root, then open `http://localhost:8000/...`
-- For Notion-backed pages, you need `netlify dev` (`npx netlify dev`) to proxy `/api/notion/*` to the serverless function
-- The magic page is fully client-side and works with the simple Python server
+  - For blog-post page, use `?slug=xxx` query param (JS reads it as fallback) — the local server can't reach Notion, so demo content shows, but side-art and layout work
+- For full Notion-backed testing, use `npx netlify dev` (Netlify CLI)
+- `.claude/launch.json` has "Netlify Dev" preconfigured
 
 ---
 
@@ -57,23 +60,68 @@ Personal Website/
   writing.html                     # Essays/writing page
   blog-post.html                   # Individual essay reader (served at /writing/:slug)
   magic.html                       # Interactive card trick (standalone, no nav)
-  magic-clip.mp4                   # 40s trimmed clip of Wesley Wang's film (3.4 MB, 720p)
+  h3ll0.html                       # Semi-private contact page (noindex)
+  404.html                         # Custom 404 (butterfly postcard)
+  magic-clip.mp4                   # 40s Wesley Wang clip (3.4 MB, gitignored source)
   netlify.toml                     # Netlify build/redirect config
   netlify/
     functions/
-      notion.js                    # Serverless Notion API proxy
+      notion.js                    # Notion API proxy
+      blog-render.js               # SSR blog post meta tag injection for /writing/:slug
   favicon.png                      # Sunflower favicon (transparent)
   sunflowerfavicon.png             # Source favicon image
-  hero-bw.png.png                  # B&W botanical illustrations (homepage)
-  hero-color.png.png               # Color botanical illustrations (blossom animation)
-  justsunflower-bw.png             # B&W sunflower (loading animation)
+  og-image.png                     # 1200x630 shrubbery — shared OG image for all pages
+  shrubbery-color.png              # Source landscape botanical (used for og-image and 404)
+  shrubbery-bw.png                 # B&W version
+  butterfly.png / butterfly-new.png # 404 page hero
+  hero-bw.png.png / hero-color.png.png # Home hero (blossom animation base)
+  hero1.png .. hero4.png           # Newer hero variants (hero3/4 currently used)
+  justsunflower-bw.png             # B&W sunflower (loading animation on blog/writing)
   justsunflower-color.png          # Color sunflower (loading animation)
-  hak1-8.jpeg/jpg                  # Hilma af Klint art images (writing page demo)
-  sunflower-*.png                  # Unused legacy sunflower images
-  .gitignore                       # Excludes full 139MB source video
+  hello-portrait.jpg               # h3ll0 page headshot (400x400, sepia filter)
+  wallpapersunflower.png           # (Personal use; kept locally)
+  side-art/
+    into-nature.jpg                # Example side art for the "into-nature" essay
+  hak1-8.jpeg/jpg                  # Hilma af Klint art (writing page demo fallback)
+  .gitignore                       # Excludes the full 139MB Wesley Wang video + wallpapers
   CLAUDE_CONTEXT.md                # This file
   Personal Website Setup Guide.md  # Original setup notes
 ```
+
+---
+
+## Notion Database — Blog Posts
+
+Columns used by the site:
+
+| Property | Type | Purpose |
+|----------|------|---------|
+| `Title` | title | Essay title |
+| `Slug` | rich_text | URL slug — /writing/[slug] |
+| `Preview` | rich_text | Preview text on cards + meta description for OG |
+| `Author` | rich_text | Author name |
+| `Status` | select | Only "Published" essays appear |
+| `Published Date` | date | Sorting + display |
+| `Card Type` | select | text / image / art-only / quote |
+| `Card Color` | select | sage / rose / gold / lavender / white |
+| `Card Image` | files | Thumbnail on writing grid + OG image override |
+| `Featured` | checkbox | Anchors essay to top of grid |
+| `Feature Order` | number | Position among featured essays (odd → left col, even → right col) |
+| `Side Art` | files | Optional per-essay decorative image on blog post left margin |
+| `Compact Spacing` | checkbox | Tightens paragraph margins (poems etc.) |
+| `Order` | number | **DEPRECATED** — old sorting field, still in DB but ignored by code |
+
+### Annotations sub-database (inline in each essay)
+Each essay page can have an inline database named anything at the bottom:
+
+| Property | Type | Purpose |
+|----------|------|---------|
+| `Trigger` | title | The exact text (matches Notion orange highlight in the essay) |
+| `Label` | rich_text | Small title on the annotation popup (e.g., "Definition") |
+| `Body` | rich_text | Popup body text (now supports paragraphs + bullet points via `•`) |
+| `Phonetic` | rich_text | Optional (e.g., "/dɪˈfɪnɪʃən/") |
+| `Link` | url | Optional external link |
+| `Image` | files/url/text | Optional image in the popup |
 
 ---
 
@@ -81,59 +129,67 @@ Personal Website/
 
 ### 1. `index.html` — Landing Page
 
-**Background:** `#ece8e2` (warm beige)
+**Background:** `#faf8f5` (matches writing page)
 
 **Layout (desktop):**
-- Left 50% (fixed): Botanical illustration hero with blossom animation — B&W base, color version fades in on 12s `@keyframes blossom` loop. Current illustrations feature anemone, lily of valley, butterfly, alnus, and esoteric circular diagrams (updated 2026-05-02; replaced the earlier hero showing red clover/brown knapweed/digitalis purpurea).
-- Right 50%: Centered intro text (max-width 460px) with credit text absolutely positioned at bottom, left-aligned with intro
+- Left 50% (fixed): botanical hero with blossom animation — B&W base, color version fades in on 12s cycle (`@keyframes blossom`, color visible ~62.5% of cycle)
+- Right 50%: centered intro text (max-width 460px) + credit at bottom
 
-**Layout (mobile, <900px):**
-- Hero hidden (`display:none` on `.left-hero`)
+**Layout (mobile <900px):**
+- Hero hidden
 - Full-width intro
-- Hamburger menu (edge-to-edge, subscribe input hidden)
-- Credit text stretches to full width, left-aligned
+- Hamburger → full-page menu (edge-to-edge, black text centered)
+- Credit text `max-width:460px` matches intro's left edge
 
-**Nav:** Fixed top-right with `Home`, `Writing`, `Magic` links + email subscribe form. Auto-hides on scroll down, returns on scroll up.
+**Nav:** Fixed top-right — Home, Writing links + email subscribe input.
+- Hover: rugged hand-drawn underline sweeps in from left to right (via `#roughline` SVG filter, 0.3s clip-path animation)
+- No "Magic" link — the magic page is unlisted, only linked via the PS
 
-**Bio mentions:** Lumen Labs, 1517 Fund, contact email. Ends with "PS: Want to see a **magic trick**?" with 60px top margin separating it from the bio.
+**PS line:** *"PS: Don't click this. It's for muggles only."* — "this" is a tie-dye sparkle link that opens `magic.html` in a new tab. Six colored star glyphs animate around the word on hover, and the word itself cycles through tie-dye hues.
 
-**Credit:** "Made with ❤️ by Harry, Nazifa, Om and Claude" — left-aligned with intro paragraph.
+**Credit:** "Made with ❤️ by Harry, Nazifa, Om and Claude"
+
+**Hero loader:** Same sunflower fill-up animation as writing/blog pages. Skipped entirely if cached; when shown, holds for 1.5s minimum before fading out.
 
 ---
 
 ### 2. `writing.html` — Essays Page
 
-**Background:** `#faf8f5` (off-white)
+**Background:** `#faf8f5`
 
 **Layout (desktop):**
-- Left 50%: Scrollable masonry grid of essay cards
-- Right 50% (fixed): Poem text with watercolor brush stroke highlights (SVG filter with feTurbulence/feDisplacementMap)
+- Left 50%: masonry grid (two explicit columns via flex, not CSS columns)
+- Right 50% (fixed): poem heading *"Scribbles about moments / in the in-between spaces, / … / For this is where beauty lies."* with watercolor brush strokes on "in-between" (yellow) and "beauty" (green)
 
-**Layout (mobile, <900px):**
-- Poem appears first (`order:-1`), then single-column grid (`order:1`)
-- Body uses `display:flex;flex-direction:column` for the reorder
+**Layout (mobile <900px):**
+- Poem appears first (`order:-1`), then single-column card grid
+- `body { display:flex; flex-direction:column }` enables the reorder
 - No credit text on this page
 
-**Loading animation:** Sunflower fill-up (see "Loading Animation" section below) vertically and horizontally centered in the left grid via `min-height:100vh`.
+**Loading animation:** Sunflower fill-up centered in the left grid via `min-height:100vh`. See "Loading Animation" section.
 
-**Poem opening line:** "Writings about moments in the in-between spaces," (updated 2026-05-02 from the previous "I write about moments in...").
+**Sort order** (client-side in `renderPosts`):
+1. **Featured essays** first, sorted by `Feature Order` ascending
+2. **Unfeatured essays** by `Published Date` descending
 
-**Card types** (from Notion `Card Type` property):
+**Column distribution:**
+- Featured with odd `Feature Order` → **left column** (top-down)
+- Featured with even `Feature Order` → **right column** (top-down)
+- Unfeatured essays: distributed to whichever column has **less accumulated height** (`estHeight()` per card type — art ~460, image ~300, text/quote scale with preview length)
+- Special rule: when placing an art-only card, avoid stacking within 350px of the previous art in the same column — switch columns if needed
 
-| Type | Class | Clickable | Tape | Notes |
-|------|-------|-----------|------|-------|
-| `text` | `.card` | Yes → `/writing/[slug]` | Yes | Color variants: sage/rose/gold/lavender |
-| `image` | `.card-img` | Yes → `/writing/[slug]` | Yes | `overflow:visible` so tape shows |
+**Card types** (from Notion `Card Type`):
+
+| Type | CSS Class | Clickable | Tape | Notes |
+|------|-----------|-----------|------|-------|
+| `text` | `.card` | Yes → `/writing/[slug]` | Yes | Color variants |
+| `image` | `.card-img` | Yes → `/writing/[slug]` | Yes | `overflow:visible` for tape |
 | `art-only` | `.art-card` | No | No | Pure image postcard |
-| `quote` | `.card-quote` | No | Yes | Poem/quote with `#fiction` tag |
+| `quote` | `.card-quote` | No | Yes | With `#fiction` tag |
 
-**Tape effect:** Translucent rectangle (`rgba(200,190,170,0.4)`) at `top:-7px`, cycling through 3 positions/rotations.
+**Meta line on cards:** `by {author} · {formatted date}` — shows both if present, either alone if only one. Art-only cards skip.
 
-**Notion database properties:**
-- `Title` (title), `Slug` (rich_text), `Preview` (rich_text), `Author` (rich_text)
-- `Card Type` (select), `Card Color` (select), `Card Image` (files)
-- `Status` (select) — must be "Published" to appear
-- `Order` (number) — sort ascending
+**Tape effect:** Translucent rectangle at `top:-7px`, cycles through 3 positions.
 
 ---
 
@@ -141,286 +197,289 @@ Personal Website/
 
 **Background:** `#faf8f5`
 
-**Clean URLs:** Served at `/writing/:slug` via Netlify rewrite. JS parses slug from `window.location.pathname`, queries the Notion database to find the matching page ID, then fetches page metadata and blocks.
+**Clean URLs:** Served at `/writing/:slug` via the `blog-render` Netlify function. The function fetches the essay from Notion (by slug), injects proper OG/Twitter meta tags, and returns the enriched HTML. Client-side JS then loads the content as before.
 
-**Important:** Because pages are served from `/writing/[slug]`, all asset references inside `blog-post.html` must use **absolute paths** (e.g. `/favicon.png`, `/justsunflower-bw.png`). Relative paths would resolve to `/writing/...` and break.
+**Important:** All asset references (images, favicon) inside `blog-post.html` must use **absolute paths** (`/favicon.png`, `/side-art/…`) because the page is served from `/writing/[slug]`.
 
-**Loading animation:** Full-screen sunflower fill-up animation (`position:fixed`, centered) overlaid on the page. Fades out (0.6s opacity transition) once content is rendered. Footer/subscribe/star hidden until then.
+**Loading animation:** Full-screen sunflower fill-up overlay while content fetches. Fades out when ready.
 
 **Layout (desktop):**
-- Max-width 1060px page, content column max-width 540px pushed right
+- Max-width 1060px page, content column max-width 540px pushed right (`margin-left:auto`)
 - Margin notes positioned absolutely to the left of content (`right:calc(100% + 48px)`)
+- Optional **side art** (see below) sits fixed in the empty left area
 
-**Layout (mobile, <900px):**
+**Layout (mobile <900px):**
 - Full-width content
-- Margin notes hidden; tap on orange-highlighted text opens a slide-up **bottom sheet**
+- Margin notes hidden; tap orange text opens a **bottom sheet** (slide-up)
+- Side art hidden
 
 **Annotation system:**
-1. In Notion, orange-colored text becomes annotation triggers
-2. `richTextToHTML()` groups consecutive orange segments into `<span class="a" data-trigger="...">`
-3. An inline database named "Annotations" at the bottom of each Notion page provides the popup content
-4. Database columns: `Trigger` (title), `Label` (text), `Body` (text), `Phonetic` (text), `Link` (url), `Image` (files/url/text)
-5. `fetchAnnotations()` queries via `/api/notion/database/{dbId}`
-6. `wireUpAnnotations()` creates margin note elements and wires hover (desktop) / click (mobile) handlers
-
-**Desktop annotation behavior:**
-- Hover orange text → margin note fades in at the same Y-position
-- Mouse can move to the note (600ms hide delay)
-- Only one note shown at a time
-
-**Mobile annotation behavior:**
-- Tap orange text → overlay slides up from bottom
-- White card with rounded top corners on semi-transparent backdrop
-- Body scroll locked while open
-- Dismiss via X button or backdrop tap
+1. Orange-colored text in Notion → detected in `richTextToHTML()`, wrapped as `<span class="a" data-trigger="...">`
+2. Inline "Annotations" database at bottom of each Notion page stores popup content
+3. Body supports **paragraphs and bullet points** — `formatAnnotationBody()` splits on newlines, groups `•`-prefixed lines into `<ul>`
+4. Hover on desktop shows margin note; tap on mobile opens bottom sheet
+5. Only one margin note visible at a time (600ms hide delay when moving cursor between text and popup)
 
 **Notion block rendering** (`blocksToHTML`):
-- `heading_1/2` → `<h2>`, `heading_3` → `<h3>`
-- `paragraph` → `<p>`
-- `bulleted/numbered_list_item` → `<ul>/<ol>` (adjacent wrappers deduped)
-- `quote` → `<blockquote>` with orange left border
-- `divider` → `<hr>`
-- `image` → `<img>`
-- `callout` → renders as `.refs` box (used for "References & Inspiration")
-- `child_database` → skipped (handled separately for annotations)
-- Pagination: `start_cursor` loop fetches all blocks
+- Headings, paragraphs, lists (with dedup of adjacent list wrappers), quotes, dividers, images, callouts (as References box)
+- Skips `child_database` blocks
+- Pagination via `start_cursor` loop
 
-**Footer:** `<hr>` divider, subscribe form, "Made with ❤️" credit, decorative star.
+**Per-post options (Notion):**
+- **`Side Art`** (Files & Media): decorative image fixed to left of content column, `mix-blend-mode:multiply` so white bg blends with cream. Falls back to `/side-art/[slug].jpg` local file if Notion field empty. Hidden on mobile.
+- **`Compact Spacing`** (checkbox): adds `.compact` class to `.body`, drops `p { margin-bottom }` from 20px to 4px. For poems / list-like posts.
+
+**Footer:** hr, subscribe form, "Made with ❤️" credit, decorative star.
 
 ---
 
 ### 4. `magic.html` — Interactive Card Trick
 
-**Background:** `#f4f1ec` (warm beige). **No navigation bar** — standalone fullscreen experience.
+**Background:** `#f4f1ec` (warm cream). **No navigation.**
 
-**Smooth dark-mode transition:** When the user enters the reveal branch (clicks "here's" in the magician quote), `body.reveal-mode` is added, swapping CSS variables for a near-black background and light text. Transition is 0.9s on `background` + `color`.
+**Smooth dark-mode transition:** clicking "here's" in the magician quote adds `body.reveal-mode` (near-black bg + light text, 0.9s cross-fade). Persists through the reveal branch.
 
-#### Flow
+#### Flow (summary — full script in git history)
 
-**Main path:**
-1. `"Welcome. I've been waiting for you."` (click to advance)
-2. `"You ready for a magic trick?"` — [Yes] [No]
-3. `"I'm going to attempt something no computer has ever done before."`
-4. `"We're going to have a little fun with your subconscious — and reveal how it shapes the choices you make."`
-5. `"In a moment, I'll riffle through a deck of cards. Your job: pick one."`
-6. `"Ready?"`
-7. `"Here goes."` (auto-advance 1.8s)
-8. **First riffle** — 75ms/card, 40-card deck, 3 consecutive force cards at the 60% mark
-9. `"...that was a bit fast, wasn't it?"`
-10. `"Let me try again. Watch closely."` (auto-advance 2.2s)
-11. **Second riffle** — 95ms/card, pattern at 60% mark: **force, doozy, force** (two distinct sightings of the same card with a brief doozy between them)
-12. `"Got one?"`
-13. `"Remember your card."`
-14. `"What fascinates me about the mind is how deeply its subconscious is woven into the fabric of reality."`
-15. `"So I'm going to read it — and guess the card you chose."`
-16. `"I'll show you a few images. Pick the one that speaks to you."`
-17. `"Choose quickly — we want your subconscious, not your conscious mind, doing the work."`
-18. **4 rounds of procedurally generated images** with countdown bar
-19. `"Fascinating. Your choices tell me a lot about you."`
-20. `"You have a beautiful mind — and it tells me the kind of card you'd choose."`
-21. `"I have it."` (auto-advance 2.5s)
-22. **Card reveal animation** + `"Was this your card?"` — [Yes — how did you do that?] [No — you missed it.]
+Main path: welcome → yes/no → intro lines → **first riffle (92ms/card, 3 consecutive force cards)** → "…that was a bit fast" → **second riffle (117ms/card, 2 force cards back-to-back — no doozy between)** → "Got one?" → subconscious framing → 4 image rounds → "I have it." → **card reveal** → "Was this your card?"
 
-**Branch A — User says No:**
-- `"Then I'm just another muggle computer after all."` → jumps to final scene via `goN(4)`
+**Yes branch** → magician quote with "here's" link → dark mode → "Are you sure?" → red pill → tap-to-play → 40s Wesley Wang clip (pauses on last frame 2s, then fades) → **reveal paragraph** (dark mode) with link to full film → Return to Homepage
 
-**Branch B — User says Yes (the threshold):**
-- `"A magician never reveals their secrets — but if you really want to know, [here's] how it works."` *(with hint: "or click anywhere else to keep the magic alive")*
-- **B1 — Click anywhere besides "here's":** jumps to final scene
-- **B2 — Click "here's":** triggers `enterRevealMode()` → background fades to dark over 0.9s
+**Blue pill (unsure)** → skips video, jumps to final scene
+**No branch** → "Then I'm just another muggle computer after all." → final scene
+**Click anywhere else on magician quote** → keeps magic alive, jumps to final scene
 
-**Reveal branch (after clicking "here's"):**
-- `"Are you sure? Once you see the reveal, you can't unsee it."` — [Yes, give me this forbidden knowledge.] [Nope, I'll stay in blissful ignorance.]
-- **Blue pill:** jumps to final scene via `goN(3)` (still in dark mode)
-- **Red pill:** advances to video scene
+**Final scene:** "Thanks for letting me in." → **[ Try again ]** [ Return to Homepage ]. "Try again" restarts the trick with a fresh force card and different opening text ("Welcome again." / "You ready for another try?"). Only one retry allowed — subsequent final scenes hide the button.
 
-**Video scene (full-screen, dark):**
-- Tap-to-play gate with "Watch closely." + play icon (no fade — sharp cut on play)
-- 40-second clip from Wesley Wang's "nothing, except everything." — opens with the "1 in 3 people pick 7" force demonstration
-- No controls, no scrubbing
-- At **39.5 seconds** the video pauses on the last frame
-- Holds for 2 seconds, then scene fades to reveal paragraph
+#### Mechanics
 
-**Reveal paragraph (scrollable scene in dark mode):**
-```
-One in three? Not one in ten?
+- **Force card:** picked at page load (`pickForce()`) from ranks 2–10, random suit. Rebuilt on Try Again.
+- **buildDeck(fc, pattern):** 40-card deck with force cards placed at 60% mark per pattern array.
+  - Deck 1: `[true, true, true]` — 3 consecutive
+  - Deck 2: `[true, true]` — 2 consecutive (doozy removed)
+- **Doozy cards:** random rank/suit with opposite color treatment to make force stand out.
+- **Riffle timing:**
+  - First: 92ms base + 35ms extra on force = 127ms force / 92ms doozy
+  - Second: 117ms base + 55ms extra on force = 172ms force / 117ms doozy
+- **Playing card pips:** `pipsHTML(rank, suit)` uses standard playing card layouts. Mobile: 1.5rem riffle, 1.8rem reveal.
+- **Procedural images:** `genImg()` uses seeded PRNG (`m32`) with 16 palettes and 12 styles.
+- **Countdown bar:** 4px tall, 14px below image grid, animates via `@keyframes countdown` (transform:scaleX) over 2.5s.
 
-This is because of something magicians call the force — the same tactic used
-to give you the illusion of choice in my magic trick. Your card was decided
-before you ever began — placed in the deck three times, each appearance held
-on screen a fraction longer than the others. Just long enough for your eye
-to catch it, and your mind to claim it as a choice.
+#### Scene navigation
 
-The images, the rounds, the talk of subconscious patterns? Theater. Or, in
-magic, we call it misdirection.
-
-The interesting question isn't how the trick works. It's how often it works
-elsewhere — in the partner you "chose," the career you "fell into," the next
-thing you're about to do.
-
-Free will is real. But it's rarer and quieter than we think.
-
-If this resonated, watch Wesley Wang's full film here.
-
-[Return to Homepage]
-```
-
-The "here" link opens the full YouTube video in a new tab.
-
-**Final scene (all paths except the red-pill terminal):**
-- `"Thanks for letting me in."` — [Return to Homepage]
-
-**Decline path (user says "No" at the start):**
-- `"A pity. We were going to have some fun with your mind — and your free will. But the choice, of course, is yours."` — [Return to Trick] [Return to Homepage]
-
-#### Magic trick mechanics
-
-**The force:** `pickForce()` chooses a random card (rank 2–10) at page load. `buildDeck(forceCard, pattern)` constructs a 40-card deck with force cards placed at the 60% mark according to a pattern array:
-- **Deck 1** (first riffle): `[true, true, true]` — 3 consecutive forces
-- **Deck 2** (second riffle): `[true, false, true]` — force, doozy, force (gap creates two distinct impressions)
-
-**Doozy cards:** `doozy()` generates random rank/suit with the **opposite** color treatment so the force card visually pops.
-
-**Riffle timing:** Cards fade in/out with longer hold times on force cards:
-- First riffle: 80ms base + 35ms extra for force = 115ms force / 80ms doozy
-- Second riffle: 105ms base + 55ms extra for force = 160ms force / 105ms doozy
-
-**Playing card pips:** `pipsHTML(rank, suit)` renders the correct number of suit symbols in standard playing card layouts. `PIP_POS` defines `[left%, top%, flipped?]` arrays for ranks 1–10. Face cards (A, J, Q, K) fall back to a single large center suit symbol.
-
-**Pip sizes:**
-- Desktop: 1.9rem (riffle), 2.3rem (reveal card)
-- Mobile: 1.5rem (riffle), 1.8rem (reveal card)
-
-**Procedurally generated images:** `genImg(cv, seed)` uses a seeded PRNG (`m32`) with **16 color palettes** and **12 generation styles**: flowing curves, concentric circles, geometric shapes, radial blobs, mirrored ellipses, interference patterns, organic blobs, diagonal stripes, layered circle grids, spirograph curves, voronoi cells, layered waves. Each round shows 4 unique images with a 2.5-second countdown.
-
-**Countdown bar:** 4px tall track 14px below the image grid, animates via `@keyframes countdown` using `transform: scaleX(1)` → `scaleX(0)` over 2.5s.
-
-#### Scene navigation system
-
-- `window.go()` — advance one scene with standard 500ms fade-out
-- `window.goSharp()` — advance one scene with no fade (used for cinematic cuts)
-- `window.goN(n)` — advance n scenes (used to skip branch scenes)
-- `window.enterRevealMode()` — adds `.reveal-mode` class to body for dark mode
+- `window.go()` — advance one scene with 500ms fade-out
+- `window.goSharp()` — advance with no fade (video → reveal cut)
+- `window.goN(n)` — advance n scenes (skip branches)
+- `window.enterRevealMode()` — adds `.reveal-mode` for dark theme
 
 ---
 
-## Serverless Proxy (`netlify/functions/notion.js`)
+### 5. `h3ll0.html` — Semi-Private Contact Page
 
-Proxies Notion API requests with CORS headers. Routes:
+Unlisted contact card at `harrygandhi.com/h3ll0`. `<meta name="robots" content="noindex, nofollow">` so search engines skip it.
 
+**Layout:** Centered card, max-width 420px:
+- Circular headshot (`hello-portrait.jpg`, 120px, `filter:sepia(0.85)`)
+- "Hi, I'm Harry."
+- "Here's where you'll find me."
+- Contact rows (each with brand logo SVG + label + handle):
+  - **Signal** → signal.me/#eu/harry.1089 (hover: Signal blue #3A76F0)
+  - **Email** → mailto:harry.m.gandhi@gmail.com (hover: Gmail red #EA4335)
+  - **X / Twitter** → x.com/TheHarryGandhi (hover: black)
+  - **LinkedIn** → linkedin.com/in/harrygandhi (hover: LinkedIn blue #0A66C2)
+  - **Website** → harrygandhi.com (hover: site orange #c47a3a)
+- Footer: "Made with ❤️ by Harry, Nazifa, Om and Claude"
+
+Icon color transitions smoothly (0.2s) on hover; row background tints in the brand color.
+
+**Personal-use QR + wallpapers** (local only, gitignored):
+- `hello-qr.png` — 1000x1000 standalone QR for `/h3ll0`
+- `lockscreen-light.png` — 1290x2796 iPhone wallpaper (cream bg, dark QR, sunflower motif below)
+- Regeneration script at `scratchpad/make_qr_and_wallpapers.py`
+
+---
+
+### 6. `404.html` — Custom 404
+
+Netlify serves this automatically for missing routes.
+
+**Layout (centered, no-scroll):**
+- Big "404" (`clamp(64px, 12vh, 128px)` — scales with viewport height)
+- Italic subtitle: *"This page seems to live in the in-between."*
+- **Butterfly postcard** (`butterfly-new.png`, landscape 1195x880) with 3 pieces of scotch tape (top-left, top-right, bottom-center — same tape style as writing cards)
+- **← back home** link (orange with rugged hover)
+- Footer: "Made with ❤️"
+
+**No-scroll design:** `html,body { overflow:hidden; height:100dvh }`. All sizes use `clamp()` with `vh` so content scales to any viewport. Image capped at `max-height:34vh` so it always fits.
+
+**Tab title:** `Error 404`
+
+---
+
+## Serverless Functions (`netlify/functions/`)
+
+### `notion.js` — Notion API proxy
+
+Routes:
 | Endpoint | Action |
 |----------|--------|
-| `POST /api/notion/database` | Query main blog database (Published, sorted by Order) |
-| `POST /api/notion/database/:id` | Query inline database by ID (for annotations) |
+| `POST /api/notion/database` | Query main blog database (Published only) |
+| `POST /api/notion/database/:id` | Query inline database (annotations) |
 | `GET /api/notion/page/:id` | Get page metadata |
-| `GET /api/notion/blocks/:id` | Get child blocks (supports `?start_cursor=` pagination) |
+| `GET /api/notion/blocks/:id` | Get child blocks (paginated) |
 
-Environment variables (in Netlify dashboard):
-- `NOTION_API_KEY` — Notion integration token
-- `NOTION_DATABASE_ID` — Main blog database ID
+Env vars: `NOTION_API_KEY`, `NOTION_DATABASE_ID`
 
----
+### `blog-render.js` — SSR meta tag injection for /writing/:slug
 
-## Shared Patterns Across Pages
+- Extracts slug from URL path
+- Queries Notion by slug for the essay
+- Fetches `blog-post.html` template via HTTPS
+- **Strips any existing OG/twitter/description meta tags** (prevents duplicates from overriding)
+- Injects fresh title, description, og:image, twitter:card meta tags
+- Defaults `og:image` to `/og-image.png` (shrubbery) so every share preview has the same rich image; Notion `Card Image` overrides per essay
+- 5-minute cache for reasonable propagation
 
-**Nav:** Home / Writing / Magic / subscribe input + button.
-- Fixed-position on home and writing pages, hides on scroll down
-- Normal flow on blog-post (no fixed-position nav)
-- Magic page has **no nav** at all
-
-**Hamburger menu (mobile):** 3-span button animates to X on `.open`. Nav gets translucent background. Subscribe input hidden on mobile (`display:none !important`).
-
-**MailerLite:** Same API key/group ID on all pages. `subscribe(inputId)` POSTs to `https://connect.mailerlite.com/api/subscribers`.
-
-**Favicon:** `favicon.png` (transparent sunflower). Blog-post.html uses absolute path `/favicon.png`.
-
-**Font:** Brygada 1918 from Google Fonts (weights 400–700, with italic).
+Result: shared blog post URLs on WhatsApp/iMessage/Telegram/Slack show the essay title + preview + shrubbery image.
 
 ---
 
-## Loading Animation (writing.html and blog-post.html)
+## Shared Patterns
 
-Two stacked sunflower images (`justsunflower-bw.png` base, `justsunflower-color.png` overlay). The color overlay uses an animated `clip-path` to create a "fill up from the bottom" effect.
+**Nav:**
+- Home + Writing links + subscribe form
+- Fixed-position on home and writing pages; normal flow on blog-post; **no nav on magic**
+- Hides on scroll down, shows on scroll up
+- Hover: hand-drawn underline sweep (uses `#roughline` SVG filter)
+- Mobile: hamburger → full-page overlay, edge-to-edge, links centered
 
-**Current keyframes** (after the "no drain" refactor):
+**Mobile hamburger:** 3 spans → animates to X on `.open`. `nav.menu-open` covers viewport with z-index:100.
+
+**MailerLite subscribe:** Same API key/group across pages. `subscribe(inputId)` POSTs email to `connect.mailerlite.com/api/subscribers`.
+
+**Favicon:** `favicon.png` (transparent sunflower). Blog-post uses absolute path `/favicon.png`.
+
+**Font:** Brygada 1918 from Google Fonts (weights 400–700, italic variants).
+
+**OG image:** `og-image.png` (1200x630, cropped from shrubbery-color.png). Used by index, writing, and (by default) all blog posts.
+
+**SVG filters (used across pages):**
+- `#watercolor` — soft brush-stroke effect on "in-between" and "beauty" (writing page)
+- `#roughline` — thin hand-drawn wobble for nav underlines + intro link hovers
+
+---
+
+## Loading Animation (writing + blog-post pages)
+
+Two stacked sunflower images (`justsunflower-bw.png` base, `justsunflower-color.png` overlay). Color layer uses animated `clip-path` for bottom-up fill.
 
 ```css
 @keyframes fillUp {
-  0%, 8% { clip-path: inset(100% 0 0 0); }   /* hold grey at start of cycle */
-  85%, 100% { clip-path: inset(0 0 0 0); }   /* fill up, hold full color */
+  0%, 8% { clip-path: inset(100% 0 0 0); }
+  85%, 100% { clip-path: inset(0 0 0 0); }
 }
 ```
 
-**Pattern user sees** (2.8s loop):
+Pattern (2.8s loop):
 1. ~0.22s grey hold
-2. ~2.16s color fills up from bottom
-3. ~0.42s full color hold
-4. **Instant snap** back to grey at the loop boundary
-5. Repeat
+2. ~2.16s color fills up
+3. ~0.42s color hold
+4. Instant snap back to grey at loop boundary → repeat
 
-Previous behavior used a "drain down" return (clip-path reversing); the new version replaces it with an instant snap-to-grey, which is more cinematic and avoids the inverse-fill effect.
-
----
-
-## Design Decisions & Known Details
-
-- **No CSS framework** — all styles inline in each HTML file's `<style>` block
-- **No build step** — plain HTML/CSS/JS served directly
-- **Mobile breakpoints:** 900px (most pages), 500px (magic page card sizing)
-- **Touch targets:** 44px minimum on mobile nav links and buttons
-- **Card masonry:** CSS `column-count` — fills left column first, then right
-- **Color palette:** Orange accent `#c47a3a`, beige bg `#ece8e2` (home) / off-white `#faf8f5` (writing/blog), warm `#f4f1ec` (magic light mode), near-black `#0a0a0a` (magic dark mode), text `#1a1a1a`
-- **Tape on image cards** requires `overflow:visible` (was previously clipped by `overflow:hidden`)
-- **Writing page** has no credit text (removed intentionally)
-- **Home page credit** is left-aligned with intro using `left:50%;transform:translateX(-50%);max-width:460px`
-- **Blog post nav** is not fixed (normal document flow)
-- **Blog post clean URLs:** `/writing/:slug` via Netlify rewrite. JS looks up slug → page ID via DB query.
-- **Absolute paths in blog-post.html** required for images and favicon
-- **Magic page has no nav** — standalone experience with "Return to Homepage" button at end
-- **Favicon caching:** Browsers cache favicons aggressively — hard refresh (Ctrl+Shift+R) or incognito may be needed after updates
-- **Magic page video** (`magic-clip.mp4`) is a 3.4MB / 720p / 40-second trim of Wesley Wang's "nothing, except everything." (used with copyright awareness; if it ever needs removing, the reveal branch can fall back to the paragraph alone)
-- **Source video** (the full 139MB 1080p file) is gitignored
+Home page uses the same sunflower asset with **1.5s minimum display** if shown, or **skipped entirely if hero images are cached**.
 
 ---
 
-## Pending Future Work (discussed, not started)
+## Design Decisions & Gotchas
 
-- **Tag-based filtering** on writing page (Notion `Tags` multi-select property + filter chips above masonry grid)
-- **Multi-image hero animation** on home page (cycle through 4 botanical illustration color variants — currently uses just one B&W↔color pair)
-- Zapier auto-email integration
-- MailerLite welcome email automation
-
-## Recently Completed
-- Poem opening line changed: "I write about moments in..." → "Writings about moments in..." ✓ (2026-05-02)
-- Home page hero refreshed with new botanical illustration (anemone, butterfly, lily of valley, etc.) ✓ (2026-05-02)
-- Magic riffle slowed: first riffle 75→80ms/card, second riffle 95→105ms/card ✓ (2026-05-02)
+- **No CSS framework**, no build step — plain HTML/CSS/JS inline styles
+- **Mobile breakpoint:** 900px (magic page also has 500px for card sizing)
+- **Touch targets:** 44px minimum on mobile
+- **Card masonry:** two explicit flex columns (not CSS `column-count`) so we can custom-place featured essays and balance heights
+- **Color palette:** cream `#faf8f5` (bg), ink `#1a1a1a` (text), orange accent `#c47a3a`, `#EAE9E7` (h3ll0/404 bg)
+- **Blog post clean URLs:** `/writing/:slug` via Netlify rewrite → `blog-render` function
+- **Absolute paths in blog-post.html** required because served from `/writing/[slug]`
+- **Favicon caching:** browsers cache aggressively — hard refresh (Ctrl+Shift+R) or incognito after updates
+- **Notion file URLs** are AWS S3 signed and expire ~1 hour after generation. Handled correctly because JS refetches on every page load, but this is why the shared OG image is served from our own domain (never expires)
+- **WhatsApp/social preview caching:** platforms cache previews for days — a bad initial share sticks until cache expires. Add `?v=1` to bypass, or wait
 
 ---
 
-## Git History (most recent first)
+## Pending Future Work (discussed, not done)
+
+- **Tag-based filtering** on writing page (Notion `Tags` multi-select + filter chips)
+- **Multi-image hero animation** on home (cycle through 4 color variants — currently just B&W↔color pair)
+- **Zapier auto-email** integration
+- **MailerLite welcome email** automation
+- **"Try again" button on magic finalS** — was discussed but never landed (only the slower riffle + doozy removal shipped from that round). Details: pick new force card, reset scene index to 0, use "Welcome again." / "You ready for another try?" for scenes 0 and 1 based on `attemptCount` counter. Only one retry allowed. Change `const forceCard`/`const deck1`/`const deck2` to `let` to support reassignment.
+
+---
+
+## Recently Completed (rough reverse chronological)
+
+- Second riffle: dropped doozy between force cards (`[true, false, true]` → `[true, true]`)
+- Slowed riffle timing (+12ms each)
+- Annotation body supports paragraphs + bullet points via `formatAnnotationBody()`
+- Compact Spacing checkbox for poems (tighter paragraph margins)
+- Per-essay Side Art (Notion Files field + local `/side-art/[slug].jpg` fallback)
+- Writing page heading: "Writings" → "Scribbles"
+- Blog post OG image defaults to shrubbery (was often blank)
+- Home page mobile footer alignment + rugged underline hover on intro links
+- Prevent art cards from stacking in same column
+- Published dates added to writing grid cards
+- Featured + Feature Order sorting with odd-left/even-right column placement
+- Contact page (`/h3ll0`) with brand-tinted hover states + SVG logos
+- 404 page with butterfly postcard, no-scroll layout, taped edges
+- Rename `/hello-a7c2f` → `/h3ll0`
+- Semi-private contact page + local QR + iPhone wallpapers (personal use)
+
+---
+
+## Git History (recent 30, newest first)
 
 ```
-62b3047 Refine magic riffle and loading animation behavior
-a48e99e Add reveal branch to magic page with video gate and refined copy
-e5bd91d Update bio copy and Lumen Labs link on home page
-611160e Update context document with all recent changes
-24e0ce5 Update favicon with new transparent sunflower image
-1a2f645 Update favicon with transparent background
-b55ece1 Fix favicon path on blog posts, vertically center writing loading animation
-a39f554 Add sunflower loading animation to writing page, bigger loading text, new favicon
-9f20b24 Fix sunflower loading paths, update hero B&W image
-ecc23ac Add sunflower loading animation to blog post page
-5bed5c4 Clean blog post URLs, loading state, remove filler text
-91545ef Add pip layouts to cards, more image variety, tune riffle speed
-69525bc Slow down card riffle speed by 10ms per card
-f38f663 Increase spacing before magic trick PS line on home page
-fd21a9e Add magic trick page and link it from nav and home page
-9b0e15f Update poem text, intro copy, card layout, and favicon
-1326aaa Align credit left on home page, remove from writing page, fix image card tape
-f96b104 Fix mobile issues: annotations, poem order, hero image, nav, credit placement
-b50eb00 Add favicon, mobile hamburger menu, bottom-sheet annotations, and polish
-12f34f4 Add image support to margin note annotations
-c1bf482 Add #fiction tag to quote cards and match heading font size with essay cards
-8a248e6 Add Notion API integration, Netlify deployment, and full site redesign
-254e4ca Initial commit: add personal website files
+9d87fff Second riffle: drop the doozy between the two force cards
+679f9c0 Magic trick: slower riffle + Try again button on final scene
+a5132de Support bullet points and paragraphs in annotation bodies
+af5d39a Add per-post Compact Spacing toggle for poems
+77054ed Add optional per-essay side art to blog posts
+0ae2473 Change writing page heading from "Writings" to "Scribbles"
+1c1b5d3 Blog post share previews now always include the shrubbery OG image
+cdf9432 Home page polish: mobile footer alignment + link hover underline
+cf6e896 Prevent art cards from stacking in the same column (fix)
+7b84d80 Add published dates to cards and avoid art-card adjacency
+c86b8c2 Balance writing columns by estimated card heights, not card counts
+01a2af8 Sort writing page by Featured + Feature Order, then Published Date
+e64994f Add brand-colored logos and footers to contact & 404 pages
+00f0751 Fix 404 alignment — center postcard and back-home link cleanly
+77cc9cf No-scroll 404 that scales to any viewport
+4232f99 Replace 404 image with landscape butterfly-new, add third piece of tape
+cc76a1c Add on-brand 404 page
+6b15934 Rename /hello-a7c2f -> /h3ll0, drop WhatsApp, add Website button
+c9ae1b5 Remove "Nice to meet you." line from /hello page
+8881706 Add sepia filter to /hello contact page portrait
+5e4f98f Remove QR and lock screen wallpapers from the deployed site
+e5ef9ea Add semi-private /hello-a7c2f contact page + QR wallpapers
+51fd879 Update home page PS line — magic trick reverse psychology
+e398e2a Swap OG image to shrubbery, update meta descriptions and magic page title
+ccf249e Add OG image for site homepage and writing page
+720b655 Hold hero loader for 1.5s minimum when shown; skip entirely if cached
+5d8ed01 Add sunflower loader overlay to home page hero
+8c6201e Strip fallback OG tags before injecting per-essay ones
+bba8d8b Drop " — Harry Gandhi" suffix from shared link previews
+4bc052c Render proper OG meta tags for shared blog post URLs
 ```
+
+Full log via `git log --oneline`.
+
+---
+
+## For Future Me
+
+- Site is stable, well-tested across mobile/desktop
+- All aesthetic decisions have been made and iterated on — cream bg, Brygada 1918, orange accent, botanical/scrapbook feel
+- The user (Harry) iterates in small batches — expect several rounds of "let me see" then "let's tweak X"
+- Always offer to preview locally before pushing when the change is visible
+- Server-side Netlify Function changes aren't observable in Python http.server previews — verify via `curl` after deploy
+- Favicon and OG image previews cache aggressively — mention this when relevant
+- Keep other pending working-tree changes (favicon.png, hak file deletions, .claude/) untouched during commits — commit only what was intentionally changed
