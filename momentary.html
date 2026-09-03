@@ -1,0 +1,1241 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover">
+<title>Momentary Notes</title>
+<meta name="description" content="Machine generated piano, learnt from Bertrand Chamayou, Hideyuki Hashimoto and Hania Rani. Played here once, and never again.">
+<meta name="theme-color" content="#faf8f5">
+<meta property="og:title" content="Momentary Notes">
+<meta property="og:description" content="Machine generated piano, learnt from Bertrand Chamayou, Hideyuki Hashimoto and Hania Rani. Played here once, and never again.">
+<meta property="og:type" content="website">
+<meta property="og:url" content="https://harrygandhi.com/momentary">
+<meta property="og:site_name" content="Harry Gandhi">
+<meta property="og:image" content="https://harrygandhi.com/og-image.png">
+<meta property="og:image:width" content="1200">
+<meta property="og:image:height" content="630">
+<meta name="twitter:card" content="summary_large_image">
+<meta name="twitter:title" content="Momentary Notes">
+<meta name="twitter:description" content="Machine generated piano, learnt from Bertrand Chamayou, Hideyuki Hashimoto and Hania Rani. Played here once, and never again.">
+<meta name="twitter:image" content="https://harrygandhi.com/og-image.png">
+<link rel="icon" type="image/png" href="/favicon.png">
+<link href="https://fonts.googleapis.com/css2?family=Brygada+1918:ital,wght@0,400;0,500;0,600;0,700;1,400;1,500;1,600;1,700&display=swap" rel="stylesheet">
+<style>
+*{margin:0;padding:0;box-sizing:border-box;}
+html,body{
+  width:100%;height:100%;overflow:hidden;
+  font-family:'Brygada 1918',serif;
+  background:#faf8f5;color:#1a1a1a;
+  -webkit-font-smoothing:antialiased;
+}
+body.idle{cursor:none;}
+
+/* ── Canvas stack ─────────────────────────────────────── */
+#viz{position:fixed;inset:0;display:block;}
+#grain{
+  position:fixed;inset:0;display:block;
+  pointer-events:none;opacity:.45;mix-blend-mode:multiply;
+}
+#vignette{
+  position:fixed;inset:0;pointer-events:none;mix-blend-mode:multiply;
+  background:radial-gradient(ellipse at center,
+    rgba(250,248,245,0) 42%,
+    rgba(226,220,210,.38) 100%);
+}
+
+/* ── Controls — one cluster, bottom right ─────────────── */
+.chrome{position:fixed;z-index:20;transition:opacity .9s ease;}
+body.idle .chrome{opacity:0;pointer-events:none;}
+
+/* Words on the right */
+#ui{
+  right:0;bottom:max(16vh, 96px);
+  display:flex;flex-direction:column;align-items:flex-end;gap:11px;
+  padding:0 58px;max-width:min(48ch, 46vw);
+}
+#ui .credo{
+  font-size:11.5px;font-style:italic;line-height:1.8;letter-spacing:.01em;
+  color:#6b655e;text-align:right;
+}
+#ui .credo a{
+  color:inherit;text-decoration:none;
+  border-bottom:1px solid rgba(107,101,94,.42);
+  transition:color .2s, border-color .2s;
+}
+#ui .credo a:hover{color:#c47a3a;border-bottom-color:#c47a3a;}
+#ui .btn{margin-top:9px;}
+
+/* Transport and the way out on the left */
+#transport{
+  left:0;bottom:0;
+  display:flex;align-items:center;gap:24px;
+  padding:22px 30px;
+}
+
+/* Pause — two ink bars that become a play triangle */
+/* After Bailey Latimer's "Pulsing Play Button" — a filled disc with the
+   glyph knocked out of it, and a second disc of the same colour expanding
+   and fading out from behind. In our ink rather than his red. */
+#playBtn{
+  position:relative;
+  width:32px;height:32px;
+  background:none;border:none;padding:0;cursor:pointer;
+  display:flex;align-items:center;justify-content:center;
+  opacity:.8;transition:opacity .25s;
+}
+#playBtn:hover{opacity:1;}
+
+.play-btn{
+  position:relative;z-index:2;
+  width:32px;height:32px;border-radius:50%;
+  display:flex;align-items:center;justify-content:center;
+  background:#1a1a1a;
+  transition:background-color .2s ease;
+}
+#playBtn:hover .play-btn{background:#000;}
+.play-btn svg{display:block;}
+.play-btn .ico-play{margin-left:2px;}   /* optically centre the triangle */
+
+.play-btn-pulse{
+  position:absolute;z-index:0;left:50%;top:50%;
+  transform:translateX(-50%) translateY(-50%);
+  width:32px;height:32px;border-radius:50%;
+  background:#1a1a1a;
+  opacity:0;pointer-events:none;
+}
+/* Only while the browser is still holding the sound back. */
+#playBtn.calling .play-btn-pulse{
+  animation:pulse-border 1500ms ease-out infinite;
+}
+@keyframes pulse-border{
+  0%  {transform:translateX(-50%) translateY(-50%) translateZ(0) scale(1);   opacity:1;}
+  100%{transform:translateX(-50%) translateY(-50%) translateZ(0) scale(1.5); opacity:0;}
+}
+@media(prefers-reduced-motion:reduce){
+  #playBtn.calling .play-btn-pulse{animation:none;}
+  #playBtn.calling{animation:callfade 2.4s ease-in-out infinite;}
+  @keyframes callfade{0%,100%{opacity:.5}50%{opacity:1}}
+}
+#playBtn svg{display:block;}
+#playBtn .ico-play{display:none;}
+#playBtn.paused .ico-pause{display:none;}
+#playBtn.paused .ico-play{display:block;}
+
+/* Volume — speaker glyph plus a bar that fills, so it reads as a level */
+.vol{display:flex;align-items:center;gap:10px;opacity:.55;transition:opacity .25s;}
+.vol:hover{opacity:1;}
+.vol svg{display:block;flex:none;}
+#vol{
+  -webkit-appearance:none;appearance:none;
+  width:84px;height:3px;border-radius:2px;outline:none;cursor:pointer;
+  background:linear-gradient(to right,
+    #c47a3a 0 var(--fill,75%), rgba(26,26,26,.20) var(--fill,75%) 100%);
+}
+#vol::-webkit-slider-thumb{
+  -webkit-appearance:none;width:10px;height:10px;border:none;border-radius:50%;
+  background:#c47a3a;cursor:pointer;
+}
+#vol::-moz-range-thumb{
+  width:10px;height:10px;border:none;border-radius:50%;background:#c47a3a;cursor:pointer;
+}
+#vol::-moz-range-track{background:transparent;}
+
+/* back home */
+.btn{
+  font-family:inherit;font-size:12.5px;letter-spacing:.06em;
+  color:#1a1a1a;background:none;border:none;cursor:pointer;
+  padding:6px 2px;position:relative;text-decoration:none;opacity:.55;
+  transition:opacity .25s;
+}
+.btn:hover{opacity:1;}
+.btn::before{
+  content:'';position:absolute;left:-2px;right:-2px;bottom:2px;height:2px;
+  background:#1a1a1a;filter:url(#roughline);
+  clip-path:inset(0 100% 0 0);transition:clip-path .3s ease-out;pointer-events:none;
+}
+.btn:hover::before{clip-path:inset(0 0 0 0);}
+
+@media(max-width:640px){
+  /* Too narrow for two corners — stack the words above the transport */
+  #ui{
+    left:0;right:0;bottom:86px;
+    align-items:flex-start;max-width:none;gap:9px;padding:0 24px;
+  }
+  #ui .credo{font-size:10.5px;text-align:left;line-height:1.75;}
+  #transport{padding:16px 18px 20px;gap:16px;}
+  #vol{width:60px;}
+  .btn{font-size:12px;}
+}
+</style>
+</head>
+<body>
+
+<!-- Rough hand-drawn underline filter (shared with the rest of the site) -->
+<svg style="position:absolute;width:0;height:0;" aria-hidden="true"><defs>
+  <filter id="roughline" x="-5%" y="-50%" width="110%" height="200%">
+    <feTurbulence type="fractalNoise" baseFrequency="0.09 0.24" numOctaves="3" seed="5"/>
+    <feDisplacementMap in="SourceGraphic" scale="4" xChannelSelector="R" yChannelSelector="G"/>
+  </filter>
+</defs></svg>
+
+<canvas id="viz"></canvas>
+<canvas id="grain"></canvas>
+<div id="vignette"></div>
+
+<div id="ui" class="chrome">
+  <p class="credo">These are machine generated sounds, learnt from artists like
+    <a href="https://bertrand-chamayou.com/en/" target="_blank" rel="noopener noreferrer">Bertrand Chamayou</a>,
+    <a href="https://hideyukihashimoto.com/" target="_blank" rel="noopener noreferrer">Hideyuki Hashimoto</a>, and
+    <a href="https://haniarani.com/" target="_blank" rel="noopener noreferrer">Hania Rani</a>.
+    While it doesn&rsquo;t carry the same beauty, there is an awe to what a
+    machine is able to do.</p>
+  <p class="credo">This music is momentary. It&rsquo;s played here, and never
+    again.</p>
+  <p class="credo">Take it all in while you can.</p>
+
+  <a class="btn" href="/">&larr; Take me back</a>
+</div>
+
+<div id="transport" class="chrome">
+  <button id="playBtn" aria-label="Pause">
+    <span class="play-btn-pulse" aria-hidden="true"></span>
+    <span class="play-btn">
+      <svg class="ico-pause" width="9" height="11" viewBox="0 0 9 11" aria-hidden="true">
+        <rect x="0" y="0" width="3" height="11" fill="#faf8f5"/>
+        <rect x="6" y="0" width="3" height="11" fill="#faf8f5"/>
+      </svg>
+      <svg class="ico-play" width="9" height="11" viewBox="0 0 9 11" aria-hidden="true">
+        <path d="M0 0 L9 5.5 L0 11 Z" fill="#faf8f5"/>
+      </svg>
+    </span>
+  </button>
+
+  <div class="vol">
+    <svg width="18" height="14" viewBox="0 0 18 14" aria-hidden="true">
+      <path d="M1 5 H4 L8 1.5 V12.5 L4 9 H1 Z" fill="#1a1a1a"/>
+      <path d="M11 4.6 A3.4 3.4 0 0 1 11 9.4" fill="none" stroke="#1a1a1a"
+            stroke-width="1.3" stroke-linecap="round"/>
+      <path d="M13.6 2.4 A6.6 6.6 0 0 1 13.6 11.6" fill="none" stroke="#1a1a1a"
+            stroke-width="1.3" stroke-linecap="round"/>
+    </svg>
+    <input type="range" id="vol" min="0" max="1" step="0.01" value="0.75"
+           autocomplete="off" aria-label="Volume">
+  </div>
+
+</div>
+
+<script>
+/* ═══════════════════════════════════════════════════════════════
+   STILLNESS — a generative music box with a kaleidoscope
+
+   Two ways to make sound:
+     1. AUDIO_FILE = null  → the built-in generative engine (default).
+        Piano + pad, D natural minor, never repeats. The visualiser is
+        driven by the actual note events, so image and music are the
+        same data.
+     2. AUDIO_FILE = '/something.mp3' → plays that file instead and
+        drives the visualiser from an FFT analyser. Drop in a track you
+        own or that is licensed, set the path, done.
+   ═══════════════════════════════════════════════════════════════ */
+
+const AUDIO_FILE = null;      // e.g. '/screensaver.mp3'
+const FILE_LOOP  = true;
+
+/* Radians per second the whole figure drifts round. 0 holds it still;
+   0.031 was the turning it had before. */
+const SPIN = 0;
+
+const REDUCED = matchMedia('(prefers-reduced-motion: reduce)').matches;
+
+/* ───────────────────────────────────────────────────────────────
+   CANVAS + KALEIDOSCOPE
+
+   Everything is drawn once into a single narrow wedge, then that
+   wedge is blitted around the circle (rotated + mirrored) with
+   `multiply` blending. Ink piles up where copies overlap, exactly
+   like overlapping washes on paper.
+   ─────────────────────────────────────────────────────────────── */
+
+const cvs = document.getElementById('viz');
+const ctx = cvs.getContext('2d');
+const grainCvs = document.getElementById('grain');
+
+/* Two ink layers. Marks worth keeping fade slowly; incidental ones — the
+   quiet off-beat notes, the bell tones, the orbiter tracery — lift several
+   times faster, so the figure keeps its bones while its surface keeps
+   moving. They are flattened into a third canvas each frame, which means the
+   number of kaleidoscope blits stays exactly what it was. */
+const wedgeA = document.createElement('canvas');   // lasting
+const wedgeB = document.createElement('canvas');   // fleeting
+const wedgeC = document.createElement('canvas');   // the two, combined
+const wcA = wedgeA.getContext('2d');
+const wcB = wedgeB.getContext('2d');
+const wcC = wedgeC.getContext('2d');
+let wc = wcA;                    // the primitives draw into whichever is current
+const FLEETING = 4.5;            // how much faster the incidental layer lifts
+
+function fadeLayer(g, r){
+  g.save();
+  g.setTransform(1, 0, 0, 1, 0, 0);
+  g.globalCompositeOperation = 'destination-out';
+  g.fillStyle = 'rgba(0,0,0,' + Math.min(0.5, r).toFixed(4) + ')';
+  g.fillRect(0, 0, wedgeA.width, wedgeA.height);
+  g.restore();
+}
+
+let W = 0, H = 0, DPR = 1, CX = 0, CY = 0, R = 0;
+
+let SEG = 8;                       // number of mirrored sectors
+let wedgeAngle = Math.PI / SEG;    // half a sector — the drawable slice
+
+const INK    = 'rgba(26,26,26,';
+const ACCENT = 'rgba(196,122,58,';
+
+function resize(){
+  DPR = Math.min(2, window.devicePixelRatio || 1);
+  W = window.innerWidth; H = window.innerHeight;
+
+  cvs.width = Math.round(W * DPR); cvs.height = Math.round(H * DPR);
+  cvs.style.width = W + 'px';      cvs.style.height = H + 'px';
+  ctx.setTransform(DPR, 0, 0, DPR, 0, 0);
+
+  CX = W / 2; CY = H / 2;
+  /* On a tall phone a disk sized to the short edge leaves the screen mostly
+     empty, so let it run wider and crop at the sides instead. */
+  R = (H > W * 1.3) ? Math.min(W * 0.50, H * 0.32) : Math.min(W, H) * 0.38;
+
+  const wpx = Math.max(2, Math.ceil(R * DPR));
+  for(const c of [wedgeA, wedgeB, wedgeC]){ c.width = wpx; c.height = wpx; }
+  for(const g of [wcA, wcB]){
+    g.setTransform(DPR, 0, 0, DPR, 0, 0);
+    g.lineCap = 'round';
+  }
+
+  buildGrain();
+}
+
+/* Paper grain — generated once, sits on top with multiply blending */
+let grainTile = null;
+function buildGrain(){
+  if(!grainTile){
+    grainTile = document.createElement('canvas');
+    grainTile.width = grainTile.height = 220;
+    const g = grainTile.getContext('2d');
+    const img = g.createImageData(220, 220);
+    for(let i = 0; i < img.data.length; i += 4){
+      const v = 200 + Math.random() * 55;
+      img.data[i] = img.data[i+1] = img.data[i+2] = v;
+      img.data[i+3] = 26 + Math.random() * 30;
+    }
+    g.putImageData(img, 0, 0);
+  }
+  grainCvs.width = W; grainCvs.height = H;
+  grainCvs.style.width = W + 'px'; grainCvs.style.height = H + 'px';
+  const g = grainCvs.getContext('2d');
+  g.fillStyle = g.createPattern(grainTile, 'repeat');
+  g.fillRect(0, 0, W, H);
+}
+
+/* ── Ink primitives (drawn into the wedge, origin = centre) ──── */
+
+/* A jittered arc. The wobble is deterministic in (angle, radius), so a
+   mark looks hand-drawn but never shimmers between frames. */
+function inkArc(r, a0, a1, jit, steps){
+  wc.beginPath();
+  for(let i = 0; i <= steps; i++){
+    const u = i / steps;
+    const a = a0 + (a1 - a0) * u;
+    const rr = r + jit * (Math.sin(a * 9.3 + r * 0.07) + 0.55 * Math.sin(a * 23.1 + r * 0.031));
+    const x = Math.cos(a) * rr, y = Math.sin(a) * rr;
+    i ? wc.lineTo(x, y) : wc.moveTo(x, y);
+  }
+  wc.stroke();
+}
+
+function inkSeg(r0, a0, r1, a1){
+  wc.beginPath();
+  wc.moveTo(Math.cos(a0) * r0, Math.sin(a0) * r0);
+  wc.lineTo(Math.cos(a1) * r1, Math.sin(a1) * r1);
+  wc.stroke();
+}
+
+function inkDot(r, a, rad, fill){
+  wc.beginPath();
+  wc.arc(Math.cos(a) * r, Math.sin(a) * r, rad, 0, Math.PI * 2);
+  wc.fillStyle = fill; wc.fill();
+}
+
+/* ── Orbiters ────────────────────────────────────────────────
+   Slow points tracing Lissajous figures in polar space. Each draws a
+   hairline from its last position every frame, which is what builds
+   the fine guilloche lattice between note stamps. Their frequencies
+   are mutually irrational, so the pattern never closes. ─────────── */
+
+const orbiters = [];
+function buildOrbiters(){
+  orbiters.length = 0;
+  const n = REDUCED ? 3 : (W < 700 ? 4 : 7);
+  for(let i = 0; i < n; i++){
+    orbiters.push({
+      ws: 0.085 + Math.random() * 0.26,      // angular sweep speed
+      wr: 0.045 + Math.random() * 0.170,     // radial breathing speed
+      ps: Math.random() * 6.283,
+      pr: Math.random() * 6.283,
+      rc: 0.24 + Math.random() * 0.52,       // centre radius (fraction of R)
+      ra: 0.07 + Math.random() * 0.20,       // radial amplitude
+      col: INK,
+      alpha: 0.085 + Math.random() * 0.03,
+      lw: 0.6 + Math.random() * 0.5,
+      px: null, py: null
+    });
+  }
+}
+
+function drawOrbiters(t, energy){
+  const swell = 1 + energy * 0.28;
+  for(const o of orbiters){
+    const a = wedgeAngle * (0.5 + 0.5 * Math.sin(t * o.ws + o.ps));
+    const r = R * (o.rc + o.ra * swell * Math.sin(t * o.wr + o.pr));
+    const x = Math.cos(a) * r, y = Math.sin(a) * r;
+    if(o.px !== null){
+      wc.strokeStyle = o.col + (o.alpha * (0.55 + energy * 0.9)).toFixed(4) + ')';
+      wc.lineWidth = o.lw;
+      wc.beginPath(); wc.moveTo(o.px, o.py); wc.lineTo(x, y); wc.stroke();
+    }
+    o.px = x; o.py = y;
+  }
+}
+
+/* ── Ring pulses (chord changes) ─────────────────────────────── */
+const pulses = [];
+function drawPulses(dt){
+  for(let i = pulses.length - 1; i >= 0; i--){
+    const p = pulses[i];
+    p.age += dt;
+    const u = p.age / p.life;
+    if(u >= 1){ pulses.splice(i, 1); continue; }
+    const r = p.r0 + (p.r1 - p.r0) * u;          // linear: never lingers anywhere
+    wc.strokeStyle = p.col + (0.026 * Math.pow(1 - u, 1.6)).toFixed(4) + ')';
+    wc.lineWidth = 0.9;
+    inkArc(r, 0, wedgeAngle, 1.6, 26);
+  }
+}
+
+/* ── Note stamps ─────────────────────────────────────────────
+   Pitch class → angle inside the wedge. Pitch height → radius. The
+   same note always lands in the same place, so a repeated phrase
+   redraws over itself and the figure rhymes with the music. ────── */
+
+function stamp(n){
+  /* Structural voices and the firmer melody notes are worth keeping; the
+     quiet ones and the bells are passing weather. */
+  wc = (n.kind === 'bass' || n.kind === 'chord' || n.vel >= 0.46) ? wcA : wcB;
+
+  const pc  = ((n.midi % 12) + 12) % 12;
+  const nrm = Math.max(0, Math.min(1, (n.midi - 36) / 52));
+  const wA  = wedgeAngle;
+
+  const a = wA * (0.10 + 0.80 * (pc / 12));
+  const r = R * (0.10 + 0.82 * nrm) * (0.99 + Math.random() * 0.02);
+  const v = n.vel;
+
+  if(n.kind === 'bass'){
+    wc.strokeStyle = ACCENT + (0.32 + v * 0.24).toFixed(3) + ')';
+    wc.lineWidth = 1.5;
+    inkArc(r, 0, wA, 2.0, 30);                 // a ring right around the figure
+    wc.lineWidth = 0.8;
+    inkSeg(r, 0, R * 0.96, 0);                 // spine along the mirror seam
+    pulses.push({ r0: r, r1: R * 0.90, age: 0, life: 3.0, col: INK });
+    return;
+  }
+
+  if(n.kind === 'bell'){
+    wc.strokeStyle = INK + (0.30 + v * 0.24).toFixed(3) + ')';
+    wc.lineWidth = 0.8;
+    inkSeg(r * 0.88, a, r * 1.12, a);
+    inkDot(r, a, 1.1 + v, INK + '0.40)');
+    return;
+  }
+
+  const alpha = 0.22 + v * 0.34;
+  wc.strokeStyle = INK + alpha.toFixed(3) + ')';
+  wc.lineWidth = 0.55 + v * 0.9;
+
+  /* Each pitch class always draws the same gesture, so the figure keeps one
+     vocabulary and a repeated phrase redraws over itself. Gestures that reach
+     the mirror seams (angle 0 and wedgeAngle) join up across copies — that is
+     what makes this read as a single piece of geometry rather than as marks
+     scattered inside a pie slice. */
+  switch(pc % 4){
+    case 0:                                    // continuous concentric ring
+      wc.lineWidth = 0.65 + v * 1.05;
+      inkArc(r, 0, wA, 1.8, 30);
+      break;
+
+    case 1: {                                  // chevron, seam to seam
+      wc.strokeStyle = INK + (alpha * 0.85).toFixed(3) + ')';
+      const rIn = r * 0.87;
+      wc.beginPath();
+      wc.moveTo(rIn, 0);
+      wc.lineTo(Math.cos(a) * r, Math.sin(a) * r);
+      wc.lineTo(Math.cos(wA) * rIn, Math.sin(wA) * rIn);
+      wc.stroke();
+      inkDot(r, a, 0.9 + v * 1.4, INK + (alpha * 1.2).toFixed(3) + ')');
+      break;
+    }
+
+    case 2:                                    // spoke
+      inkSeg(r * 0.40, a, r, a);
+      inkDot(r, a, 1.0 + v * 1.6, INK + (alpha * 1.2).toFixed(3) + ')');
+      break;
+
+    default: {                                 // faceted cell
+      wc.strokeStyle = INK + (alpha * 0.58).toFixed(3) + ')';
+      wc.lineWidth = 0.45 + v * 0.6;
+      const span = wA * (0.30 + v * 0.50);
+      const a0 = Math.max(0, a - span / 2), a1 = Math.min(wA, a + span / 2);
+      const rIn = r * 0.80;
+      inkArc(r,   a0, a1, 1.4, 18);
+      inkArc(rIn, a0, a1, 1.4, 18);
+      inkSeg(rIn, a0, r, a0);
+      inkSeg(rIn, a1, r, a1);
+    }
+  }
+}
+
+/* ── Frame loop ──────────────────────────────────────────────── */
+
+let vizT = 0, lastFrame = 0, rot = 0, energy = 0;
+
+/* ── The breath ──────────────────────────────────────────────
+   Every three and a half minutes or so the music stops. Nothing new is
+   drawn, the ink lifts out of the paper on its own over the silence, and
+   by the time the sound returns the kaleidoscope has a new symmetry and
+   a clean sheet. The fade rate ramps up across the pause because a purely
+   multiplicative fade plateaus at 1/255 and would leave a ghost.
+   ──────────────────────────────────────────────────────────── */
+let breath = null;              // {t0, t1} on the audio clock — the fade window
+let silentUntil = 0;            // audio time the music comes back; nothing draws before it
+const breathQ = [];
+
+function fadeRateNow(t){
+  if(!breath) return 0.013;
+  const u = (t - breath.t0) / (breath.t1 - breath.t0);
+  if(u < 0 || u > 1) return 0.013;
+  return 0.013 + 0.024 * Math.min(1, u);
+}
+
+/* Fading the canvas alone cannot take the picture all the way out: an alpha
+   fade is multiplicative, so ink lands on 1/255 and stays there as a ghost
+   until the hard clear jump-cuts it. So the dissolve is done at blit time
+   instead — the whole flattened figure is drawn at a falling opacity, which
+   reaches the paper exactly and smoothly. Smoothstep, so it eases out of the
+   music and into the silence rather than starting abruptly. */
+function dissolveNow(t){
+  if(!breath) return 1;
+  const u = (t - breath.t0) / (breath.t1 - breath.t0);
+  if(u <= 0) return 1;
+  if(u >= 1) return 0;
+  return 1 - u * u * (3 - 2 * u);
+}
+const rotBase = REDUCED ? SPIN * 0.2 : SPIN;
+
+function frame(now){
+  requestAnimationFrame(frame);
+  const nowS = now / 1000;
+  let dt = lastFrame ? nowS - lastFrame : 0.016;
+  lastFrame = nowS;
+  if(dt > 0.25) dt = 0.25;          // tab was backgrounded — don't lurch
+
+  /* Paused holds the picture: no time passes, so nothing new is drawn and
+     nothing fades. The audio clock is suspended too, so no events drain. */
+  const held = started && userPaused;
+  if(held) dt = 0;
+  vizT += dt;
+
+  /* Pull due events off the queues using the audio clock, so everything
+     lands when it is heard rather than when it was scheduled. */
+  const aT = actx ? actx.currentTime : 0;
+  if(actx){
+    while(breathQ.length && breathQ[0].t0 <= aT){
+      breath = breathQ.shift();
+    }
+    if(breath && aT > breath.t1) breath = null;
+
+    while(turnQ.length && turnQ[0] <= aT){ turnQ.shift(); turnKaleidoscope(); }
+    while(noteQ.length && noteQ[0].t <= aT){
+      const n = noteQ.shift();
+      stamp(n);
+      energy += n.vel * 0.34;
+    }
+  }
+  if(analyser) pollAnalyser();
+
+  energy *= Math.exp(-dt * 1.15);
+  if(energy > 1.6) energy = 1.6;
+
+  if(!held){
+    /* Ink soaking away — the fleeting layer several times faster. */
+    const rate = fadeRateNow(aT);
+    fadeLayer(wcA, rate);
+    fadeLayer(wcB, rate * FLEETING);
+
+    /* Nothing is drawn while the music is stopped, so the sheet really is
+       blank when the next figure begins. */
+    if(!actx || aT >= silentUntil){
+      wc = wcA; drawPulses(dt);
+      wc = wcB; drawOrbiters(vizT, energy);
+    }
+  }
+
+  /* Flatten the two layers once, so the blit loop below is unchanged. */
+  wcC.clearRect(0, 0, wedgeC.width, wedgeC.height);
+  wcC.drawImage(wedgeA, 0, 0);
+  wcC.drawImage(wedgeB, 0, 0);
+
+  /* Blit the wedge around the circle. */
+  rot += dt * (rotBase * (1 + energy * 0.22)) * (1 + 0.35 * Math.sin(vizT * 0.041));
+
+  ctx.setTransform(DPR, 0, 0, DPR, 0, 0);
+  ctx.globalCompositeOperation = 'source-over';
+  ctx.fillStyle = '#faf8f5';
+  ctx.fillRect(0, 0, W, H);
+
+  ctx.globalCompositeOperation = 'multiply';
+  ctx.save();
+  ctx.globalAlpha = dissolveNow(aT);
+  ctx.translate(CX, CY);
+  ctx.rotate(rot);
+  const stepA = (Math.PI * 2) / SEG;
+  for(let i = 0; i < SEG; i++){
+    ctx.save();
+    ctx.rotate(i * stepA);
+    ctx.drawImage(wedgeC, 0, 0, R, R);
+    ctx.scale(1, -1);
+    ctx.drawImage(wedgeC, 0, 0, R, R);
+    ctx.restore();
+  }
+  ctx.restore();
+  ctx.globalCompositeOperation = 'source-over';
+}
+
+/* ═══════════════════════════════════════════════════════════════
+   AUDIO
+   ═══════════════════════════════════════════════════════════════ */
+
+let actx = null, master = null, damp = null, dryGain = null, wetGain = null,
+    convIn = null, padOut = null, analyser = null, audioEl = null;
+let noiseBuf = null;
+const noteQ = [];
+const turnQ = [];   // audio-clock times at which to turn the kaleidoscope
+
+function makeIR(seconds, decay){
+  const rate = actx.sampleRate, len = Math.floor(rate * seconds);
+  const buf = actx.createBuffer(2, len, rate);
+  for(let ch = 0; ch < 2; ch++){
+    const d = buf.getChannelData(ch);
+    for(let i = 0; i < len; i++){
+      const x = i / len;
+      const build = 1 - Math.exp(-i / (rate * 0.008));   // soft early build
+      d[i] = (Math.random() * 2 - 1) * Math.pow(1 - x, decay) * build;
+    }
+  }
+  return buf;
+}
+
+function initAudio(){
+  actx = new (window.AudioContext || window.webkitAudioContext)();
+
+  const comp = actx.createDynamicsCompressor();
+  comp.threshold.value = -14; comp.knee.value = 22;
+  comp.ratio.value = 3.4; comp.attack.value = 0.005; comp.release.value = 0.28;
+
+  master = actx.createGain();
+  master.gain.setValueAtTime(0.0001, actx.currentTime);
+  master.gain.exponentialRampToValueAtTime(Math.max(0.0002, userVol), actx.currentTime + 8);
+
+  /* Sits after the reverb, so a breath can reach real silence rather than
+     waiting on a four-second tail. */
+  damp = actx.createGain();
+  damp.gain.value = 1;
+
+  master.connect(damp); damp.connect(comp); comp.connect(actx.destination);
+
+  dryGain = actx.createGain(); dryGain.gain.value = 0.78;
+  wetGain = actx.createGain(); wetGain.gain.value = 0.62;
+  const conv = actx.createConvolver();
+  conv.buffer = makeIR(5.6, 2.7);
+  convIn = actx.createGain(); convIn.gain.value = 1;
+  convIn.connect(conv); conv.connect(wetGain);
+  dryGain.connect(master); wetGain.connect(master);
+
+  padOut = actx.createGain(); padOut.gain.value = 1;
+  padOut.connect(dryGain); padOut.connect(convIn);
+
+  /* Shared noise buffer for the hammer transient */
+  const nlen = Math.floor(actx.sampleRate * 0.4);
+  noiseBuf = actx.createBuffer(1, nlen, actx.sampleRate);
+  const nd = noiseBuf.getChannelData(0);
+  for(let i = 0; i < nlen; i++) nd[i] = Math.random() * 2 - 1;
+
+  if(AUDIO_FILE) startFile();
+  else startGenerative();
+}
+
+/* ── Felt-piano voice ────────────────────────────────────────
+   Six inharmonic partials, each with its own decay (the upper ones
+   die first), a lowpass whose cutoff opens with velocity, and a short
+   filtered noise burst standing in for the hammer. ─────────────── */
+
+const PARTIALS = [
+  { m: 1.000, g: 1.000, d: 1.00 },
+  { m: 2.002, g: 0.400, d: 0.56 },
+  { m: 3.006, g: 0.170, d: 0.36 },
+  { m: 4.013, g: 0.085, d: 0.24 },
+  { m: 5.026, g: 0.042, d: 0.17 },
+  { m: 6.044, g: 0.019, d: 0.12 }
+];
+
+function playPiano(t, midi, vel){
+  const f = 440 * Math.pow(2, (midi - 69) / 12);
+
+  const lp = actx.createBiquadFilter();
+  lp.type = 'lowpass'; lp.Q.value = 0.35;
+  lp.frequency.value = Math.min(14000, 620 + vel * vel * 3600 + f * 2.6);
+
+  const pan = actx.createStereoPanner ? actx.createStereoPanner() : null;
+  if(pan) pan.pan.value = Math.max(-0.5, Math.min(0.5, (midi - 66) / 40));
+
+  const out = actx.createGain(); out.gain.value = 1;
+  if(pan){ lp.connect(pan); pan.connect(out); } else { lp.connect(out); }
+  out.connect(dryGain); out.connect(convIn);
+
+  const base = 7.2 * Math.pow(330 / f, 0.42);   // low notes ring longer; pedal down
+  let longest = 0, fundamental = null;
+
+  for(const p of PARTIALS){
+    const o = actx.createOscillator();
+    o.type = 'sine';
+    o.frequency.value = f * p.m;
+    const g = actx.createGain();
+    const peak = Math.max(0.0002, vel * p.g * 0.52);
+    const dur = base * p.d;
+    g.gain.setValueAtTime(0.0001, t);
+    g.gain.exponentialRampToValueAtTime(peak, t + 0.006);
+    g.gain.exponentialRampToValueAtTime(0.0001, t + dur);
+    o.connect(g); g.connect(lp);
+    o.start(t); o.stop(t + dur + 0.05);
+    if(dur > longest){ longest = dur; fundamental = o; }
+  }
+
+  /* Hammer felt */
+  const ns = actx.createBufferSource(); ns.buffer = noiseBuf;
+  const nf = actx.createBiquadFilter();
+  nf.type = 'bandpass'; nf.frequency.value = Math.min(9000, f * 3.2); nf.Q.value = 0.9;
+  const ng = actx.createGain();
+  ng.gain.setValueAtTime(0.0001, t);
+  ng.gain.exponentialRampToValueAtTime(Math.max(0.0002, vel * 0.070), t + 0.003);
+  ng.gain.exponentialRampToValueAtTime(0.0001, t + 0.075);
+  ns.connect(nf); nf.connect(ng); ng.connect(lp);
+  ns.start(t); ns.stop(t + 0.14);
+
+  if(fundamental){
+    fundamental.onended = () => {
+      try { out.disconnect(); lp.disconnect(); if(pan) pan.disconnect(); } catch(e){}
+    };
+  }
+}
+
+/* ── Pad ─────────────────────────────────────────────────────── */
+function playPad(t, midis, dur){
+  const g = actx.createGain();
+  const lp = actx.createBiquadFilter();
+  lp.type = 'lowpass'; lp.frequency.value = 500; lp.Q.value = 0.5;
+
+  const lfo = actx.createOscillator(); lfo.frequency.value = 0.055;
+  const lfoG = actx.createGain(); lfoG.gain.value = 170;
+  lfo.connect(lfoG); lfoG.connect(lp.frequency);
+
+  g.connect(lp); lp.connect(padOut);
+
+  g.gain.setValueAtTime(0.0001, t);
+  g.gain.exponentialRampToValueAtTime(0.10, t + 3.4);
+  g.gain.setValueAtTime(0.10, t + dur - 3.2);
+  g.gain.exponentialRampToValueAtTime(0.0001, t + dur);
+
+  for(const m of midis){
+    for(const det of [-6, 6]){
+      const o = actx.createOscillator();
+      o.type = 'triangle';
+      o.frequency.value = 440 * Math.pow(2, (m - 12 - 69) / 12);
+      o.detune.value = det;
+      const og = actx.createGain(); og.gain.value = 0.34 / midis.length;
+      o.connect(og); og.connect(g);
+      o.start(t); o.stop(t + dur + 0.2);
+    }
+  }
+  lfo.start(t); lfo.stop(t + dur + 0.3);
+  lfo.onended = () => { try { g.disconnect(); lp.disconnect(); lfoG.disconnect(); } catch(e){} };
+}
+
+/* ═══════════════════════════════════════════════════════════════
+   THE COMPOSER
+
+   D natural minor. Four progressions, each chord held about nine
+   seconds. The melody is a weighted random walk over scale degrees
+   that snaps to chord tones on strong beats, phrased into short
+   utterances separated by rests.
+   ═══════════════════════════════════════════════════════════════ */
+
+const SCALE = [0, 2, 3, 5, 7, 8, 10];   // D E F G A Bb C
+const ROOT  = 62;                       // D4
+
+function degToMidi(deg){
+  const oct = Math.floor(deg / 7);
+  const idx = ((deg % 7) + 7) % 7;
+  return ROOT + oct * 12 + SCALE[idx];
+}
+
+const PROGRESSIONS = [
+  [0, 5, 2, 6],   // Dm  Bb  F   C
+  [0, 4, 5, 2],   // Dm  Am  Bb  F
+  [0, 3, 5, 6],   // Dm  Gm  Bb  C
+  [2, 6, 0, 5]    // F   C   Dm  Bb
+];
+
+const BPM = 46;
+const PULSE = 60 / BPM / 2;            // eighth note, about 0.652s
+const CHORD_PULSES = 16;               // about 10.4s per chord
+const CHORD_SEC = CHORD_PULSES * PULSE;
+const TAIL_SEC = 3.0;                  // last chord rings, then is damped to zero
+const QUIET_MIN = 9.5, QUIET_MAX = 13;    // a longer hold, so the fade can take its time
+const SEG_OPTIONS = [5, 6, 6, 7, 8, 8, 9, 10, 12];
+
+let prog = PROGRESSIONS[0], progIdx = 0, chordRoot = 0;
+let mDeg = 7;                           // melody position, in scale degrees
+
+/* The reference recordings lean on repetition — a short cell stated, turned
+   over, and stated again — rather than a melody that wanders. So the tune is
+   a motif of three to five scale degrees, replayed against each new chord
+   with small variations, instead of a free random walk. */
+let motif = [0, 2, 1, 4], motifIdx = 0, motifOct = 0;
+
+function newMotif(){
+  const len = 3 + ((Math.random() * 3) | 0);
+  motif = [];
+  let d = 0;
+  for(let i = 0; i < len; i++){
+    motif.push(d);
+    d += [-2, -1, 1, 1, 2, 2, 3][(Math.random() * 7) | 0];
+  }
+  motifIdx = 0;
+}
+
+/* A quiet broken-chord figure under the melody — the arpeggiated left hand
+   that runs through most of this repertoire. */
+const OST_PATTERNS = [[0, 2, 4, 2], [0, 4, 2, 4], [0, 2, 4, 6], [0, 4, 6, 4]];
+let ostPattern = OST_PATTERNS[0], ostOn = true;
+let phraseLeft = 5, restLeft = 0;
+let chordCount = 0, breathUntil = 0;
+let chordsThisCycle = 17 + ((Math.random() * 5) | 0);   // roughly 3.0 to 3.6 minutes
+let warmFrom = 0, warmSpan = 28;        // the opening builds rather than starting cold
+
+function warmAt(t){
+  if(!warmSpan) return 1;
+  return Math.max(0, Math.min(1, (t - warmFrom) / warmSpan));
+}
+let pulseIdx = 0, nextPulseTime = 0;
+
+function pushNote(t, midi, vel, kind){
+  noteQ.push({ t: t, midi: midi, vel: vel, kind: kind || 'mel' });
+  playPiano(t, midi, vel);
+}
+
+/* The music stops at the end of a chord, the paper clears itself while the
+   last sound rings out, and then there is nothing at all for five to seven
+   seconds before a new figure begins. */
+function startBreath(t){
+  const quiet = QUIET_MIN + Math.random() * (QUIET_MAX - QUIET_MIN);
+  const quietAt = t + TAIL_SEC;
+
+  /* Let the last chord ring for a beat and a half, then take it to true zero.
+     The damping sits after the convolver, so this also cuts the reverb tail
+     that would otherwise run on for another four seconds. */
+  damp.gain.cancelScheduledValues(t);
+  damp.gain.setValueAtTime(1, t + 1.5);
+  damp.gain.exponentialRampToValueAtTime(0.0001, quietAt);
+  damp.gain.setValueAtTime(0, quietAt);
+  damp.gain.setValueAtTime(1, quietAt + quiet - 0.05);
+
+  /* The paper keeps dissolving into the silence and is blank for the second
+     half of it, so the new figure always starts on a clean sheet. */
+  const clearAt = quietAt + quiet * 0.75;
+  breathQ.push({ t0: t, t1: clearAt });
+  turnQ.push(clearAt);
+
+  breathUntil = quietAt + quiet;
+  silentUntil = breathUntil;        // hold the pen off the paper for the whole pause
+  warmFrom = breathUntil; warmSpan = 12;  // the music returns gently
+
+  chordCount = 0;
+  chordsThisCycle = 17 + ((Math.random() * 5) | 0);
+  phraseLeft = 3 + ((Math.random() * 6) | 0);
+  restLeft = 0;
+}
+
+function turnKaleidoscope(){
+  let next = SEG;
+  while(next === SEG) next = SEG_OPTIONS[(Math.random() * SEG_OPTIONS.length) | 0];
+  SEG = next;
+  wedgeAngle = Math.PI / SEG;
+
+  /* By now the breath has faded the figure to nothing, so wiping the last
+     1/255 of residue is invisible — and it stops old ink drawn at a wider
+     wedge angle from being retiled across the new sector boundaries. */
+  for(const g of [wcA, wcB]){
+    g.save();
+    g.setTransform(1, 0, 0, 1, 0, 0);
+    g.clearRect(0, 0, wedgeA.width, wedgeA.height);
+    g.restore();
+  }
+  pulses.length = 0;
+
+  for(const o of orbiters){
+    o.ps = Math.random() * 6.283;
+    o.rc = 0.22 + Math.random() * 0.54;
+    o.px = null; o.py = null;      // don't streak across from the old position
+  }
+}
+
+function newChord(t){
+  if(progIdx % 4 === 0 && Math.random() < 0.55){
+    prog = PROGRESSIONS[(Math.random() * PROGRESSIONS.length) | 0];
+  }
+  chordRoot = prog[progIdx % prog.length];
+  progIdx++;
+
+  /* Triad plus a 7th, folded into a comfortable middle register */
+  const tones = [chordRoot, chordRoot + 2, chordRoot + 4].map(function(d){
+    let m = degToMidi(d);
+    while(m > 71) m -= 12;
+    while(m < 52) m += 12;
+    return m;
+  });
+
+  playPad(t, tones, CHORD_SEC + 3.4);
+
+  const w = warmAt(t);
+
+  /* Bass root, two octaves down */
+  pushNote(t, degToMidi(chordRoot) - 24, (0.44 + Math.random() * 0.12) * (0.62 + 0.38 * w), 'bass');
+
+  /* Roll the chord upward like a slow arpeggio, sometimes reaching a 9th
+     over the top for the open colour this music tends to sit in. */
+  const voiced = tones.slice().sort(function(a, b){ return a - b; });
+  if(Math.random() < 0.45) voiced.push(degToMidi(chordRoot + 8));
+  voiced.forEach(function(m, i){
+    pushNote(t + 0.16 + i * (0.22 + Math.random() * 0.16), m,
+             (0.20 + Math.random() * 0.10) * (0.55 + 0.45 * w), 'chord');
+  });
+
+  /* Turn the figure over now and then rather than every bar. */
+  ostPattern = OST_PATTERNS[(Math.random() * OST_PATTERNS.length) | 0];
+  ostOn = Math.random() < 0.72;
+  if(Math.random() < 0.28) newMotif();
+  if(Math.random() < 0.30) motifOct = (Math.random() < 0.5 ? 0 : 1);
+}
+
+function nearestChordTone(deg){
+  const target = degToMidi(deg);
+  let best = deg, bestD = 1e9;
+  for(const ct of [chordRoot, chordRoot + 2, chordRoot + 4]){
+    for(let oct = -2; oct <= 3; oct++){
+      const d = ct + oct * 7;
+      const dist = Math.abs(degToMidi(d) - target);
+      if(dist < bestD){ bestD = dist; best = d; }
+    }
+  }
+  return best;
+}
+
+function step(i, t){
+  if(i % CHORD_PULSES === 0){
+    if(chordCount >= chordsThisCycle){ startBreath(t); return; }
+    newChord(t);
+    chordCount++;
+  }
+
+  const wOst = warmAt(t);
+
+  /* Left hand: a quarter-note broken chord, well below the tune. It keeps
+     going through the melody's rests, which is what holds the piece together
+     when the right hand stops. */
+  if(ostOn && i % 2 === 0 && wOst > 0.18){
+    const k = (i >> 1) % ostPattern.length;
+    let om = degToMidi(chordRoot + ostPattern[k]) - 12;
+    while(om > 60) om -= 12;
+    while(om < 45) om += 12;
+    pushNote(t, om, (0.13 + Math.random() * 0.07) * (0.4 + 0.6 * wOst), 'ost');
+  }
+
+  /* Phrase / rest state machine */
+  if(restLeft > 0){ restLeft--; return; }
+  if(phraseLeft <= 0){
+    restLeft = 2 + ((Math.random() * 5) | 0);
+    phraseLeft = 3 + ((Math.random() * 7) | 0);
+    return;
+  }
+
+  const w = warmAt(t);
+  const strong = (i % 4 === 0);
+  if(!strong && Math.random() < 0.46 + (1 - w) * 0.42) return;   // sparser while warming
+  if(strong && w < 0.30 && Math.random() < 0.55) return;
+
+  /* The cell, restated against whatever chord is underneath. Every so often
+     a note is held back or the shape inverts, so it turns over rather than
+     looping exactly. */
+  let deg = motif[motifIdx % motif.length];
+  motifIdx++;
+  if(Math.random() < 0.14) return;                     // leave a note out
+  if(Math.random() < 0.10) deg = -deg;                 // invert the interval
+
+  mDeg = chordRoot + 7 + motifOct * 7 + deg;
+  if(mDeg > 16) mDeg -= 7;
+  if(mDeg < 5)  mDeg += 7;
+  if(strong && Math.random() < 0.55) mDeg = nearestChordTone(mDeg);
+
+  const vel = ((strong ? 0.42 : 0.27) + Math.random() * 0.24) * (0.45 + 0.55 * w);
+  const midi = degToMidi(mDeg);
+  pushNote(t, midi, vel, 'mel');
+  phraseLeft--;
+
+  /* A quiet high bell, now and then */
+  if(w > 0.45 && Math.random() < 0.045){
+    pushNote(t + PULSE * 0.5, degToMidi(mDeg + 7 + (Math.random() < 0.5 ? 0 : 2)),
+             0.13 + Math.random() * 0.10, 'bell');
+  }
+
+  /* A descending flourish, rarer still */
+  if(w > 0.60 && strong && Math.random() < 0.06){
+    let d = mDeg + 5;
+    const n = 3 + ((Math.random() * 3) | 0);
+    for(let k = 0; k < n; k++){
+      pushNote(t + PULSE * 0.34 * (k + 1), degToMidi(d), 0.16 + Math.random() * 0.10, 'mel');
+      d -= 1 + ((Math.random() * 2) | 0);
+    }
+  }
+}
+
+function scheduler(){
+  if(!actx || actx.state !== 'running') return;
+  const horizon = actx.currentTime + 1.7;   // long lookahead survives tab throttling
+
+  /* If the clock ran away from us (a long suspend, a throttled tab) start
+     again from now rather than dumping the backlog all at once. */
+  if(nextPulseTime < actx.currentTime) nextPulseTime = actx.currentTime + 0.12;
+
+  let guard = 0;
+  while(nextPulseTime < horizon && guard++ < 64){
+    if(breathUntil > nextPulseTime){        // inside the pause: schedule nothing
+      nextPulseTime = breathUntil;
+      breathUntil = 0;
+      pulseIdx = 0;                         // the new cycle starts on the grid
+      continue;
+    }
+    step(pulseIdx, nextPulseTime);
+    pulseIdx++;
+    nextPulseTime += PULSE;
+  }
+}
+
+function startGenerative(){
+  nextPulseTime = actx.currentTime + 0.35;
+  warmFrom = nextPulseTime; warmSpan = 28;   // a long, quiet opening
+  scheduler();
+  setInterval(scheduler, 200);
+}
+
+/* ═══════════════════════════════════════════════════════════════
+   FILE MODE — FFT-driven visuals
+   ═══════════════════════════════════════════════════════════════ */
+
+let specPrev = null, fluxAvg = 0, lastOnset = 0;
+
+function startFile(){
+  audioEl = new Audio(AUDIO_FILE);
+  audioEl.crossOrigin = 'anonymous';
+  audioEl.loop = FILE_LOOP;
+  audioEl.preload = 'auto';
+
+  const src = actx.createMediaElementSource(audioEl);
+  analyser = actx.createAnalyser();
+  analyser.fftSize = 2048;
+  analyser.smoothingTimeConstant = 0.72;
+  src.connect(analyser);
+  analyser.connect(dryGain);
+  src.connect(convIn);
+
+  specPrev = new Float32Array(analyser.frequencyBinCount);
+  audioEl.play().catch(function(e){ console.warn('Audio file failed to play:', e); });
+
+  /* No composer to pace it, so run the same slow breath on a timer. */
+  setInterval(function(){
+    const t = actx.currentTime;
+    breathQ.push({ t0: t, t1: t + 16 });
+    turnQ.push(t + 14);
+  }, 210000);
+}
+
+function pollAnalyser(){
+  const N = analyser.frequencyBinCount;
+  const spec = new Float32Array(N);
+  analyser.getFloatFrequencyData(spec);
+
+  const binHz = (actx.sampleRate / 2) / N;
+  const lo = Math.max(1, Math.floor(70 / binHz));
+  const hi = Math.min(N - 1, Math.floor(4000 / binHz));
+
+  let flux = 0, peak = -Infinity, peakBin = lo, level = 0;
+  for(let i = lo; i < hi; i++){
+    const cur = Math.max(-100, spec[i]);
+    const prv = specPrev[i] || -100;
+    if(cur > prv) flux += cur - prv;
+    if(cur > peak){ peak = cur; peakBin = i; }
+    level += (cur + 100) / 100;
+  }
+  specPrev = spec;
+  level /= (hi - lo);
+
+  fluxAvg = fluxAvg * 0.94 + flux * 0.06;
+  energy = Math.max(energy, Math.min(1.4, Math.max(0, level - 0.28) * 2.6));
+
+  const t = actx.currentTime;
+  if(flux > fluxAvg * 1.55 && flux > 12 && t - lastOnset > 0.085){
+    lastOnset = t;
+    const f = Math.max(40, peakBin * binHz);
+    const midi = Math.round(69 + 12 * Math.log2(f / 440));
+    const vel = Math.min(0.9, 0.22 + (flux - fluxAvg) / 90);
+    const kind = midi < 46 ? 'bass' : (midi > 82 ? 'bell' : 'mel');
+    stamp({ midi: Math.max(34, Math.min(92, midi)), vel: vel, kind: kind });
+    energy += vel * 0.3;
+  }
+}
+
+/* ═══════════════════════════════════════════════════════════════
+   CHROME — transport, idle, fullscreen
+   ═══════════════════════════════════════════════════════════════ */
+
+const playBtn = document.getElementById('playBtn');
+const volEl = document.getElementById('vol');
+
+let started = false, userPaused = false, userVol = 0.75;
+let everRan = false, canCall = false;
+
+/* The icon always tells the truth about the audio clock. The pulse is only
+   for the one case where a visitor has to act: the browser is holding the
+   sound back and nothing will happen until they press something. It never
+   runs once audio has played, so a deliberate pause stays quiet. */
+function reflectState(){
+  const running = !!actx && actx.state === 'running';
+  if(running && !everRan){
+    everRan = true;
+    idleTimer();                 // start the fade clock from the real beginning
+  }
+  playBtn.classList.toggle('paused', !running);
+  playBtn.setAttribute('aria-label', running ? 'Pause' : 'Play');
+  playBtn.classList.toggle('calling', !running && !everRan && canCall && !userPaused);
+}
+
+/* There is no opening screen any more, so there is no gesture to unlock
+   audio with. Start the context regardless: browsers usually hand it back
+   suspended, in which case the patterns draw in silence and the first touch
+   of the page anywhere brings the sound in. */
+function begin(){
+  if(started) return;
+  started = true;
+  try { initAudio(); }
+  catch(e){
+    console.error('Audio could not start:', e);
+    playBtn.disabled = true;
+    playBtn.style.opacity = '.2';
+    playBtn.setAttribute('aria-label', 'Audio unavailable');
+    everRan = true;              // nothing to invite a click for
+    return;
+  }
+  actx.onstatechange = reflectState;
+  actx.resume().catch(function(){});
+  reflectState();
+
+  /* resume() is async — wait before deciding it was refused, so a page that
+     is allowed to autoplay never flashes the pulse on its way to playing. */
+  setTimeout(function(){ canCall = true; reflectState(); }, 900);
+
+  const wake = function(){
+    if(!userPaused) actx.resume().then(reflectState).catch(function(){});
+    ['pointerdown', 'keydown', 'wheel', 'touchstart'].forEach(function(ev){
+      removeEventListener(ev, wake, true);
+    });
+  };
+  ['pointerdown', 'keydown', 'wheel', 'touchstart'].forEach(function(ev){
+    addEventListener(ev, wake, true);
+  });
+}
+
+playBtn.addEventListener('click', function(){
+  if(!actx) return;
+  if(actx.state === 'running'){
+    userPaused = true;
+    actx.suspend();
+    if(audioEl) audioEl.pause();
+  } else {
+    userPaused = false;
+    actx.resume();
+    if(audioEl) audioEl.play();
+  }
+});
+
+function paintVol(){
+  volEl.style.setProperty('--fill', (parseFloat(volEl.value) * 100).toFixed(1) + '%');
+}
+volEl.addEventListener('input', function(){
+  userVol = parseFloat(volEl.value);
+  paintVol();
+  if(master) master.gain.setTargetAtTime(userVol, actx.currentTime, 0.05);
+});
+
+function toggleFullscreen(){
+  if(document.fullscreenElement) document.exitFullscreen();
+  else document.documentElement.requestFullscreen().catch(function(){});
+}
+
+addEventListener('keydown', function(e){
+  if(e.code === 'Space'){ e.preventDefault(); playBtn.click(); }
+  else if(e.key === 'f' || e.key === 'F'){ toggleFullscreen(); }
+});
+
+/* Idle — hide the chrome and the cursor so it becomes a screensaver */
+let idleT = null, firstIdle = true;
+function idleTimer(){
+  document.body.classList.remove('idle');
+  clearTimeout(idleT);
+  idleT = setTimeout(function(){
+    firstIdle = false;
+    if(started && everRan) document.body.classList.add('idle');
+  }, firstIdle ? 11000 : 3800);   // long enough to read the line the first time
+}
+['mousemove', 'mousedown', 'touchstart', 'keydown', 'wheel'].forEach(function(ev){
+  addEventListener(ev, idleTimer, { passive: true });
+});
+
+/* ── Boot ───────────────────────────────────────────────────── */
+volEl.value = userVol;      // never inherit a restored value from a reload
+paintVol();
+addEventListener('resize', function(){ resize(); buildOrbiters(); });
+resize();
+buildOrbiters();
+requestAnimationFrame(frame);
+begin();
+idleTimer();
+</script>
+</body>
+</html>

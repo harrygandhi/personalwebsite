@@ -1,18 +1,19 @@
 # Harry Gandhi Personal Website — Context Document
 
-*Last updated: 2026-08-25*
+*Last updated: 2026-09-03*
 
 ## Overview
 
 Personal blog/portfolio at **harrygandhi.com**. Static HTML site with Notion as CMS, deployed via Netlify with auto-deploy from GitHub. Font: Brygada 1918. Favicon: custom sunflower PNG (transparent background).
 
-Six pages:
+Seven pages:
 1. **`index.html`** — Home / landing page with bio + botanical hero
 2. **`writing.html`** — Essays masonry grid + poem
 3. **`blog-post.html`** — Individual essay reader, served at clean URLs `/writing/[slug]`
 4. **`magic.html`** — Interactive card trick + Wesley Wang film reveal
 5. **`h3ll0.html`** — Semi-private (unlisted) contact page at `/h3ll0`
 6. **`404.html`** — Custom 404 page (butterfly postcard)
+7. **`momentary.html`** — "Momentary Notes": generative music + ink kaleidoscope at `/momentary`, linked from the main nav **(built, not yet committed)**
 
 ---
 
@@ -48,7 +49,7 @@ Six pages:
 - `python -m http.server 8000` from project root, then open `http://localhost:8000/...`
   - For blog-post page, use `?slug=xxx` query param (JS reads it as fallback) — the local server can't reach Notion, so demo content shows, but side-art and layout work
 - For full Notion-backed testing, use `npx netlify dev` (Netlify CLI)
-- `.claude/launch.json` has "Netlify Dev" preconfigured
+- `.claude/launch.json` has two entries: **"Netlify Dev"** (port 8888, for anything Notion-backed) and **"Static"** (port 8000, plain `python -m http.server` — enough for momentary, 404 and h3ll0, and much faster to start)
 
 ---
 
@@ -60,6 +61,7 @@ Personal Website/
   writing.html                     # Essays/writing page
   blog-post.html                   # Individual essay reader (served at /writing/:slug)
   magic.html                       # Interactive card trick (standalone, no nav)
+  momentary.html                   # "Momentary Notes" — generative music + kaleidoscope (no nav on the page itself)
   h3ll0.html                       # Semi-private contact page (noindex)
   404.html                         # Custom 404 (butterfly postcard)
   magic-clip.mp4                   # 40s Wesley Wang clip (3.4 MB, gitignored source)
@@ -316,6 +318,71 @@ Netlify serves this automatically for missing routes.
 
 ---
 
+### 7. `momentary.html` — "Momentary Notes"
+
+**Status: built and verified locally, NOT yet committed or deployed.** Lives at `/momentary` (Netlify serves `.html` at the extensionless path automatically) and is **linked from the main nav as "Momentary Notes"** on index, writing and blog-post — so unlike magic, this one is meant to be found. Was called `screensaver.html` with the working title "Stillness" through most of its build; both names are gone.
+
+**Background:** `#faf8f5`. Ink `#1a1a1a`, single accent `#c47a3a`. **No nav** (same as magic).
+
+#### The music — generative, not a file
+
+There is no audio file. A Web Audio engine composes continuously, so it never repeats and the page ships zero audio bytes. This was a deliberate call: hosting a real Hideyuki Hashimoto recording (the original reference) on the site would be copyright infringement.
+
+**Reference points (Harry's):** Bertrand Chamayou, Hideyuki Hashimoto, Hania Rani — especially Chamayou's *Song for Octave*. What that shaped, concretely: 46 BPM, a repeating **motif cell** rather than a wandering melody, an **arpeggiated left-hand ostinato** running under the rests, added-9th voicings, and a lot more pedal. Nobody involved can actually listen to the output, so this is "built toward the described characteristics of that repertoire", not a verified resemblance.
+
+- **Voice:** felt-piano approximation — six inharmonic partials (`PARTIALS`), each with its own decay so upper partials die first; lowpass whose cutoff opens with velocity; short filtered noise burst as the hammer. Low notes ring longer (`base = 5.6 * (330/f)^0.40`).
+- **Reverb:** procedurally generated impulse response, `makeIR(4.6, 3.1)` — noise with exponential decay and a soft early build. No IR file needed.
+- **Pad:** triangle pairs detuned ±6 cents through a slow-LFO lowpass, one per chord.
+- **Composition:** D natural minor (`SCALE`, `ROOT = 62`), four progressions, **46 BPM**, 16 pulses (~10.4s) per chord.
+- **Motif (`motif`, `newMotif()`):** a cell of 3–5 scale degrees, restated against each chord with variation — a note occasionally dropped, the interval occasionally inverted, sometimes moved an octave. This replaced a random walk, which meandered; repetition-with-variation is what makes the repertoire sound deliberate.
+- **Ostinato (`OST_PATTERNS`, `ostOn`):** quarter-note broken chord well below the tune, midi 45–60, low velocity. Deliberately runs *through* the melody's rests — it is what holds the piece together when the right hand stops. On for ~72% of chords so it comes and goes.
+- Chord roll reaches a 9th over the top ~45% of the time, for the open colour this music sits in.
+- **Scheduling:** standard lookahead scheduler — `setInterval` 200ms, 1.7s horizon, so tab throttling can't cause gaps. Re-anchors if the clock runs away.
+
+#### The breath (cycles)
+
+Every 20–24 chords (~3.1–3.7 min) the music stops completely so the paper returns to a clean slate.
+
+1. Last chord rings for 1.5s, then `damp` ramps it to true zero by `TAIL_SEC` (3.0s).
+2. **`QUIET_MIN`/`QUIET_MAX` (9.5–13)** of held silence. Measured: **13.2s**, peak `2.4e-4`.
+3. The figure dissolves over the first three quarters of the silence and the sheet sits blank for the last quarter. Measured: a smooth monotonic ramp over **11.5s**, darkest pixel 209 → 250, ending at exactly the cream reference.
+4. Music returns on a 12s warm-up curve (`warmSpan`).
+
+**The dissolve is done at blit time, not on the canvas** (`dissolveNow()` → `ctx.globalAlpha` on the flattened wedge, smoothstep). This matters: an alpha fade is multiplicative, so ink lands on 1/255 and sits there as a ghost — fading the canvas alone produced `0.63 → 0.52` then an instant snap to blank when the hard clear landed. The canvas fade still runs underneath (it keeps the layers from saturating), and the hard clear still fires, but by then the figure is already drawn at zero opacity so it is invisible.
+
+**`damp` sits AFTER the convolver** — that placement is the whole trick. Damping before it would leave a 4.6s reverb tail running into the "silence".
+
+#### Optional audio file slot
+
+`const AUDIO_FILE = null` at the top of the script. Set it to a path and the engine is bypassed: the file plays through a `MediaElementSource` → `AnalyserNode`, and the visuals are driven by spectral-flux onset detection instead of note events. Same visual vocabulary either way. `FILE_LOOP` controls looping.
+
+#### The visualiser
+
+Pitch class → angle within the wedge; pitch height → radius. The same note always lands in the same place, so a repeated phrase redraws over itself and the figure rhymes with the music.
+
+- **Kaleidoscope:** everything is drawn into narrow wedge canvases of size `R`, then blitted around the circle rotated **and** mirrored with `multiply` blending — `2 × SEG` blits per frame. Ink darkens where copies overlap, like overlapping washes.
+- **Two ink layers.** `wedgeA` holds marks worth keeping (bass, chord tones, melody at velocity ≥ 0.46); `wedgeB` holds the incidental ones (quiet off-beat notes, bells, the ostinato, the orbiter tracery) and fades `FLEETING` (4.5×) faster. So the figure keeps its bones while its surface keeps moving. They are flattened into `wedgeC` once per frame, which keeps the blit count identical to the single-layer version. Measured separation: mean layer alpha 0.81 vs 0.13. The module-level `wc` is a *pointer* to whichever context is current — `stamp()` sets it per note, the frame loop sets it around `drawPulses`/`drawOrbiters`.
+- **Gestures** (chosen by `pc % 4`, so each pitch class always draws the same shape): concentric ring, seam-to-seam chevron, spoke, faceted cell. Gestures deliberately touch the mirror seams (angle 0 and `wedgeAngle`) so they join up across copies — that is what makes it read as one figure rather than marks scattered in a pie slice.
+- **Orbiters:** 4–7 slow points tracing Lissajous figures in polar space, drawing a hairline each frame. These build the fine guilloche lattice between note stamps. All ink.
+- **Pulses:** expanding rings on bass notes. Linear expansion (an ease-out made them decelerate into the rim and pile up a visible ring over a long cycle).
+- **`SPIN = 0`** — global rotation is currently OFF. Was `0.031` rad/s. Holding it still means every stroke lands on the same spot each time, so the lattice reads crisp rather than smeared. One constant to bring it back.
+- **`R`** = `0.38 × min(W,H)` landscape, `min(W*0.50, H*0.32)` portrait — deliberately small, for white space at the edges.
+- Paper grain (static noise tile, multiply) + soft vignette over the top.
+
+#### No intro screen
+
+The page opens straight onto the patterns. **Consequence: there is no user gesture, so browsers block audio.** Handled by starting the context anyway, drawing the patterns regardless, showing the play triangle honestly, and resuming on the first `pointerdown`/`keydown`/`wheel`/`touchstart` anywhere. Opening master fade is 8s and the composition warms up over 28s (`warmSpan`) so it arrives rather than switching on.
+
+#### Chrome (fades after idle — 11s first time, 3.8s after)
+
+- **Bottom left:** the transport (play/pause + volume), at the very bottom.
+- **Right, about a sixth of the way up** (`bottom: max(16vh, 96px)`): three italic paragraphs — one crediting the reference artists, one on the music being momentary, and a closing line on its own — with "← Take me back" → `/` beneath them. The three artist names link out to their sites in new tabs (`bertrand-chamayou.com/en/`, `hideyukihashimoto.com`, `haniarani.com`), styled as inherited-colour text with a faint underline that goes orange on hover.
+- Under 640px the two corners would collide, so the words sit above the transport and everything goes left-aligned.
+- **Transport:** play/pause + volume bar (speaker glyph + orange fill). Play button is modelled on [Bailey Latimer's "Pulsing Play Button"](https://codepen.io/baileylatimer/pen/gOPWKZo) — a 32px filled ink disc with the glyph knocked out in cream, plus a second disc of the same colour behind it scaling `1 → 1.5` while fading `1 → 0` (`@keyframes pulse-border`, 1500ms ease-out). **The pulse only runs while audio is blocked**, never once playing, so it never invites a click that does nothing.
+- Keyboard: `space` = play/pause, `f` = fullscreen (no button for it).
+
+---
+
 ## Serverless Functions (`netlify/functions/`)
 
 ### `notion.js` — Notion API proxy
@@ -348,7 +415,9 @@ Result: shared blog post URLs on WhatsApp/iMessage/Telegram/Slack show the essay
 
 **Nav:**
 - Home + Writing links + subscribe form
-- Fixed-position on home and writing pages; normal flow on blog-post; **no nav on magic**
+- Home + Writing + **Momentary Notes** links, then the subscribe form
+- Fixed-position on home and writing pages; normal flow on blog-post; **no nav on magic or momentary** (the pages themselves are chrome-free)
+- **`blog-post.html` nav links must be absolute** (`/index.html`, not `index.html`) — it is served from `/writing/[slug]`, so relative links resolve inside `/writing/`
 - Hides on scroll down, shows on scroll up
 - Hover: hand-drawn underline sweep (uses `#roughline` SVG filter)
 - Mobile: hamburger → full-page overlay, edge-to-edge, links centered
@@ -403,10 +472,21 @@ Home page uses the same sunflower asset with **1.5s minimum display** if shown, 
 - **Notion file URLs** are AWS S3 signed and expire ~1 hour after generation. Handled correctly because JS refetches on every page load, but this is why the shared OG image is served from our own domain (never expires)
 - **WhatsApp/social preview caching:** platforms cache previews for days — a bad initial share sticks until cache expires. Add `?v=1` to bypass, or wait
 
+### Canvas + Web Audio gotchas (learned building Momentary Notes)
+
+- **`destination-out` fading never reaches zero.** Fading a canvas by filling with `rgba(0,0,0,α)` in `destination-out` is multiplicative on the alpha channel, so it plateaus at 1/255 and leaves a permanent ghost. Anything drawn under an old symmetry then gets re-tiled at the new sector width and shows as pale wedges. Fix: ramp the fade rate up, then `clearRect` once at a moment the clear is invisible.
+- **Autoplay needs a gesture.** Any page without a click-through opens with a suspended `AudioContext`. Don't assume it is running — reflect the real state in the UI and resume on first interaction. `resume()` is async, so wait ~900ms before concluding it was refused, or the UI flashes.
+- **Browsers restore form values across reloads.** A `<input type="range">` came back at the viewer's old value while the JS variable held the default, so the page played at one volume while the slider showed another. `autocomplete="off"` plus setting `.value` from JS at boot.
+- **A canvas alpha fade cannot reach zero.** `destination-out` is multiplicative, so ink plateaus at 1/255 and stays as a visible ghost — the figure appears to fade a little, then jump-cut when you finally clear it. If you need a real fade to the background, do it at draw time with `globalAlpha` on the composited result, where the value reaches zero exactly.
+- **Anything drawn every frame accumulates into a wash.** Continuously drawn coloured elements (orbiters, slowly-expanding rings) build up into visible colour films over a multi-minute cycle, even at very low alpha. Discrete one-shot marks don't. Keep continuous elements neutral; save colour for stamps.
+- **Ease-out expansion piles up at the end.** An expanding ring with `1 - (1-u)^n` decelerates into its final radius and deposits a dense ring there. Linear expansion never lingers.
+- **Pause must freeze the visuals too**, or the animation keeps drawing and fading in silence. Gate on a `userPaused` flag, not on audio state — audio can be suspended simply because it hasn't been unlocked yet.
+
 ---
 
 ## Pending Future Work (discussed, not done)
 
+- **Commit and deploy `momentary.html`** — built, working, and already wired into the nav, but still uncommitted. Open questions Harry may want to revisit: the label reads "Take me back" (he once wrote "Take me home"); the play disc is filled all the time rather than only while pulsing; with sound blocked a first-time visitor sees a nearly blank page until they click, since no notes means no ink; and with `SPIN = 0` the orange bass spines now land in the same place every cycle and accumulate into four strong radial lines, where rotation used to smear them.
 - **Tag-based filtering** on writing page (Notion `Tags` multi-select + filter chips)
 - **Multi-image hero animation** on home (cycle through 4 color variants — currently just B&W↔color pair)
 - **Zapier auto-email** integration
@@ -417,6 +497,8 @@ Home page uses the same sunflower asset with **1.5s minimum display** if shown, 
 
 ## Recently Completed (rough reverse chronological)
 
+- **`momentary.html`** — "Momentary Notes", generative music + ink kaleidoscope; added to the main nav (uncommitted; see section 7)
+- **Fixed broken nav links on essay pages** — `blog-post.html` is served at `/writing/:slug` with no `<base>`, so its relative `index.html` / `writing.html` nav links resolved to `/writing/index.html` and `/writing/writing.html`, both 404. Now absolute. Pre-existing bug, found while adding the new nav item
 - Second riffle: dropped doozy between force cards (`[true, false, true]` → `[true, true]`)
 - Slowed riffle timing (+12ms each)
 - Annotation body supports paragraphs + bullet points via `formatAnnotationBody()`
@@ -483,3 +565,6 @@ Full log via `git log --oneline`.
 - Server-side Netlify Function changes aren't observable in Python http.server previews — verify via `curl` after deploy
 - Favicon and OG image previews cache aggressively — mention this when relevant
 - Keep other pending working-tree changes (favicon.png, hak file deletions, .claude/) untouched during commits — commit only what was intentionally changed
+- Momentary Notes went through many aesthetic rounds. Things Harry rejected along the way, so don't re-propose them: cartoonish nature drawings in SVG; coloured ink blotches in the card hues (they read as "faded stains"); a bare outline ring pulsing around the play button. What he liked: abstract geometric kaleidoscope line-work, cream paper with dark ink only, and the filled-disc play button from the CodePen reference
+- For anything canvas- or audio-timed, measure rather than eyeball — tap an `AnalyserNode` for real output level and sample `getImageData` luminance for "is the page actually blank". Several bugs on that page only showed up as numbers (silence that was 9.7s instead of 5–7s; a canvas that stalled at 249.6 instead of 250)
+- The in-app browser pane's fps readings drop hard while it is capturing screenshots — don't trust a low number taken alongside screenshot calls; re-measure on its own
